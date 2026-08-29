@@ -7,3 +7,10 @@ export async function fetchAllKenneyAssets(): Promise<KenneyAsset[]> {
   if (!response.ok) throw new Error("Failed to fetch assets");
   return response.json() as unknown as KenneyAsset[];
 }
+
+export async function fetchKenneyAsset(slug: string): Promise<KenneyAsset> {
+  const url = `https://github.com/letruxux/kenney-assets-registry/raw/refs/heads/main/data/full/${slug}.json`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("Failed to fetch assets");
+  return response.json() as unknown as KenneyAsset;
+}

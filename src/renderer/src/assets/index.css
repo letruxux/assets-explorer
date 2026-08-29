@@ -2,3 +2,17 @@
 @plugin "daisyui";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --animate-scroll-on-hover: scroll-on-hover 12s linear infinite;
+
+  @keyframes scroll-on-hover {
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(-50%);
+    }
+  }
+}

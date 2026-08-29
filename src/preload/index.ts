@@ -5,6 +5,9 @@ const api = {
   searchAssets(query: string) {
     return ipcRenderer.invoke("search", query);
   },
+  fetchAssetDetail(source: string, slug: string) {
+    return ipcRenderer.invoke("asset-detail", source, slug);
+  }
 };
 
 export type ApiType = typeof api;

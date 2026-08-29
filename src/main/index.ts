@@ -3,6 +3,7 @@ import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
 import { searchOnKenneyNl } from "./lib/search";
+import { fetchKenneyAsset } from "./lib/kenney-api";
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -42,6 +43,16 @@ app.whenReady().then(() => {
   ipcMain.handle("search", async (_event, query: string) => {
     const results = await searchOnKenneyNl(query);
     return results;
+  });
+  ipcMain.handle("asset-detail", async (_event, source: string, slug: string) => {
+    switch (source) {
+      case "kenney.nl":
+        const asset = await fetchKenneyAsset(slug);
+        return asset;
+
+      default:
+        throw new Error("Unknown asset source");
+    }
   });
 
   createWindow();
