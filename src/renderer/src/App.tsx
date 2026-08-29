@@ -1,35 +1,98 @@
-import Versions from './components/Versions'
-import electronLogo from './assets/electron.svg'
+import { KenneyAsset } from "@shared/types";
+import { useCallback, useEffect, useState } from "react";
+import { cn } from "./lib/utils";
 
 function App(): React.JSX.Element {
-  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState<KenneyAsset[]>([]);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const handlePong = (): void => {
+      console.log("pongawdwda");
+    };
+
+    window.electron.ipcRenderer.on("pong", handlePong);
+
+    return () => {
+      window.electron.ipcRenderer.removeListener("pong", handlePong);
+    };
+  }, []);
+
+  const searchCallback = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    setResults([]);
+
+    try {
+      const assets = await window.api.searchAssets(query);
+      setResults(assets);
+    } catch (error) {
+      setError(error instanceof Error ? error : new Error(String(error)));
+    } finally {
+      setLoading(false);
+    }
+  }, [query]);
 
   return (
-    <>
-      <img alt="logo" className="logo" src={electronLogo} />
-      <div className="creator">Powered by electron-vite</div>
-      <div className="text">
-        Build an Electron app with <span className="react">React</span>
-        &nbsp;and <span className="ts">TypeScript</span>
-      </div>
-      <p className="tip">
-        Please try pressing <code>F12</code> to open the devTool
-      </p>
-      <div className="actions">
-        <div className="action">
-          <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">
-            Documentation
-          </a>
-        </div>
-        <div className="action">
-          <a target="_blank" rel="noreferrer" onClick={ipcHandle}>
-            Send IPC
-          </a>
-        </div>
-      </div>
-      <Versions></Versions>
-    </>
-  )
+    <div className="min-h-dvh w-full">
+      <header className="join w-full p-2">
+        <input
+          type="text"
+          className="input join-item w-full"
+          placeholder="Search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+
+        <button className="btn btn-primary join-item" onClick={searchCallback} disabled={loading}>
+          {loading ? "Searching..." : "Search"}
+        </button>
+      </header>
+
+      {error && <p className="px-2 text-error">{error.message}</p>}
+
+      <section className="grid grid-cols-[repeat(auto-fit,minmax(16rem,1fr))] gap-4 p-2">
+        {results.map((result, index) => (
+          <article
+            key={result.slug ?? index}
+            className="card w-full bg-base-100 shadow-sm card-border"
+          >
+            <figure className="aspect-video overflow-hidden">
+              <img
+                src={result.images[0]}
+                alt={result.title}
+                className="h-full w-full object-cover"
+              />
+            </figure>
+
+            <div className="card-body">
+              <h2 className="card-title">{result.title}</h2>
+
+              <div className="flex gap-x-2 w-full overflow-auto scrollbar-none">
+                {result.meta.Tags.map((e) => (
+                  <span
+                    className={cn("badge", {
+                      "badge-primary": query.split(" ").includes(e),
+                      "badge-dash": !query.split(" ").includes(e)
+                    })}
+                    key={e}
+                  >
+                    {e}
+                  </span>
+                ))}
+              </div>
+{/*
+              <div className="card-actions justify-end">
+                <button className="btn btn-primary">View</button>
+              </div> */}
+            </div>
+          </article>
+        ))}
+      </section>
+    </div>
+  );
 }
 
-export default App
+export default App;
