@@ -55,40 +55,39 @@ function App(): React.JSX.Element {
 
       <section className="grid grid-cols-[repeat(auto-fit,minmax(16rem,1fr))] gap-4 p-2">
         {results.map((result, index) => (
-          <article
-            key={result.slug ?? index}
-            className="card w-full bg-base-100 shadow-sm card-border"
-          >
-            <figure className="aspect-video overflow-hidden">
-              <img
-                src={result.images[0]}
-                alt={result.title}
-                className="h-full w-full object-cover"
-              />
-            </figure>
+          <a href="" key={result.slug ?? index}>
+            <article className="card w-full bg-base-100 shadow-sm card-border">
+              <figure className="aspect-video overflow-hidden">
+                <img
+                  src={result.images[0]}
+                  alt={result.title}
+                  className="h-full w-full object-cover"
+                />
+              </figure>
 
-            <div className="card-body">
-              <h2 className="card-title">{result.title}</h2>
+              <div className="card-body">
+                <h2 className="card-title">{result.title}</h2>
 
-              <div className="flex gap-x-2 w-full overflow-auto scrollbar-none">
-                {result.meta.Tags.map((e) => (
-                  <span
-                    className={cn("badge", {
-                      "badge-primary": query.split(" ").includes(e),
-                      "badge-dash": !query.split(" ").includes(e)
-                    })}
-                    key={e}
-                  >
-                    {e}
-                  </span>
-                ))}
-              </div>
-{/*
+                <div className="flex gap-x-2 w-full overflow-auto scrollbar-none">
+                  {result.meta.Tags.map((e) => (
+                    <span
+                      className={cn("badge", {
+                        "badge-primary": query.split(" ").includes(e),
+                        "badge-dash": !query.split(" ").includes(e)
+                      })}
+                      key={e}
+                    >
+                      {e}
+                    </span>
+                  ))}
+                </div>
+                {/*
               <div className="card-actions justify-end">
-                <button className="btn btn-primary">View</button>
+              <button className="btn btn-primary">View</button>
               </div> */}
-            </div>
-          </article>
+              </div>
+            </article>
+          </a>
         ))}
       </section>
     </div>
