@@ -1,8 +1,9 @@
 import Fuse from "fuse.js";
-import { fetchAllKenneyAssets } from "./kenney-api";
+import { fetchAllKenneyAssets, fetchKenneyAsset } from "./kenney-api";
 import { searchOnItchIo } from "./itch-io-api";
+import { KenneyAsset, Scored } from "@shared/types";
 
-export async function searchOnKenneyNl(query: string) {
+export async function searchOnKenneyNl(query: string): Promise<Scored<KenneyAsset>[]> {
   const all = await fetchAllKenneyAssets();
   const fuse = new Fuse(all, {
     keys: [
@@ -14,18 +15,22 @@ export async function searchOnKenneyNl(query: string) {
     includeScore: true
   });
   const result = fuse.search(query);
-  return result.map((i) => ({ ...i.item, __score: i.score ? 1 - i.score : 0,
-    _asset_source: "kenney.nl"
-   })).filter((i) => i.__score > 0.3);
+  return result
+    .map((i) => ({
+      ...i.item,
+      __score: i.score ? 1 - i.score : 0,
+      _asset_source: "kenney.nl",
+      id: i.item.slug + "|kenney.nl"
+    }))
+    .filter((i) => i.__score > 0.3) as Scored<KenneyAsset>[];
+}
+
+export async function getOnKenneyNl(slug: string): Promise<KenneyAsset> {
+  return {
+    ...(await fetchKenneyAsset(slug)),
+    _asset_source: "kenney.nl",
+    id: slug + "|kenney.nl"
+  };
 }
 
 export { searchOnItchIo };
-
-/* searchOnKenneyNl("city").then((a) => {
-  for (const asset of a.filter((i) => i.__score < 0.8).toSorted((a, b) => a.__score - b.__score)) {
-    console.log(asset.title, "-", Math.floor((1 - asset.__score) * 100).toString() + "%");
-  }
-});
- */
-
-/* searchOnItchIo("explosion").then(console.log) */

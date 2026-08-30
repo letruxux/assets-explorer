@@ -21,7 +21,23 @@ export type KenneyAsset = {
   };
   slug: string;
   images: Array<string>;
+  download_url: string;
   _asset_source: "kenney.nl";
+  id: string;
 };
 
+export type Scored<T> = T & { __score: number };
+
 export type Asset = KenneyAsset;
+
+export interface SettingsType {
+  assetsPath: string;
+}
+
+export interface AssetsManifestType {
+  installedAssets: {
+    installPath: string;
+    installDate: string;
+    cachedAsset: Asset;
+  }[];
+}

@@ -6,6 +6,7 @@ import Home from "./routes/explore";
 import About from "./routes/my-assets";
 import "./assets/index.css";
 import ViewAsset from "./routes/view-asset";
+import Settings from "./routes/settings";
 
 declare global {
   interface String {
@@ -24,6 +25,7 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/" element={<App />}>
           <Route index element={<Home />} />
           <Route path="my-assets" element={<About />} />
+          <Route path="settings" element={<Settings />} />
           <Route path="asset/:source/:slug" element={<ViewAsset />} />
         </Route>
       </Routes>

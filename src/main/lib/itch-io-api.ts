@@ -1,6 +1,6 @@
 import * as cheerio from "cheerio";
 
-function buildItchIoSearchUrl(query: string) {
+function buildItchIoSearchUrl(query: string): string {
   const facets = ["c.2"];
   const url = new URL(`https://itch.io/search`);
   url.searchParams.set("facets", facets.join(","));
@@ -10,7 +10,9 @@ function buildItchIoSearchUrl(query: string) {
   return url.toString();
 }
 
-export async function searchOnItchIo(query: string) {
+export async function searchOnItchIo(
+  query: string
+): Promise<Array<{ title: string; author: string; url: string; image?: string }>> {
   const url = buildItchIoSearchUrl(query);
   const response = await fetch(url);
   if (!response.ok) throw new Error("Failed to fetch assets");
@@ -26,7 +28,7 @@ export async function searchOnItchIo(query: string) {
       const image = $el.find("img.lazy_loaded").attr("data-lazy_src")?.endsWith(".gif")
         ? $el.find("div.gif_overlay").attr("data-gif")
         : $el.find("img.lazy_loaded").attr("data-lazy_src");
-      return { title, author, url, image };
+      return { title, author, url: url!, image, id: url };
     })
     .get();
 }

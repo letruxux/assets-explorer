@@ -3,7 +3,8 @@ import { cn } from "./lib/utils";
 
 const navItems = [
   { to: "/", label: "Explore", end: true },
-  { to: "/my-assets", label: "My Assets", end: false }
+  { to: "/my-assets", label: "My Assets", end: false },
+  { to: "/settings", label: "Settings", end: false }
 ];
 
 function App(): React.JSX.Element {

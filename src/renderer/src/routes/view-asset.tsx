@@ -20,7 +20,7 @@ function ViewAsset(): React.JSX.Element {
 
     let cancelled = false;
 
-    async function loadAsset() {
+    async function loadAsset(): Promise<void> {
       if (!source || !slug) return;
       setLoading(true);
       setError(null);
@@ -77,9 +77,14 @@ function ViewAsset(): React.JSX.Element {
         <button className="btn btn-sm btn-square" onClick={() => navigation.back()}>
           &lt;
         </button>
-        <span>{asset.title}</span>
+        <span>
+          {asset.title} <small className="text-gray-500 text-xs">#{asset.id}</small>
+        </span>
       </h1>
-      <h3 className="mb-4">by {Object.hasOwn(asset, "author") ? (asset as any).author : asset._asset_source} • from {asset._asset_source}</h3>
+      <h3 className="mb-4">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        by {(asset as any).author || asset._asset_source} • from {asset._asset_source}
+      </h3>
 
       <Swiper
         modules={[Navigation, Pagination, A11y]}
