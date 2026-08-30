@@ -1,6 +1,7 @@
 import { buildId, ItchIoAsset, ItchIoAssetPreview } from "@shared/types";
 import * as cheerio from "cheerio";
 import { writeFileSync } from "fs";
+import { USER_AGENT } from "./utils";
 
 function buildItchIoSearchUrl(query: string): string {
   const facets = ["c.2"];
@@ -57,7 +58,6 @@ export async function fetchDownloadUrls(
   url: string,
   $: cheerio.CheerioAPI
 ): Promise<ItchIoAsset["downloads"]> {
-  writeFileSync("MOCCCC.html", $.html());
   const csrfToken = $('meta[name="csrf_token"]').attr("value");
   if (!csrfToken) throw new Error("No csrf token found");
 
@@ -67,7 +67,8 @@ export async function fetchDownloadUrls(
   const response = await fetch(postUrl, {
     method: "POST",
     headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
+      "Content-Type": "application/x-www-form-urlencoded",
+      "User-Agent": USER_AGENT
     },
     body: formData
   });
@@ -75,8 +76,7 @@ export async function fetchDownloadUrls(
   const downloadPageUrl = (await response.json()) as { url: string };
   const downloadPageResp = await fetch(downloadPageUrl.url, {
     headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
+      "User-Agent": USER_AGENT
     }
   });
   if (!downloadPageResp.ok) throw new Error("Failed to fetch url");
@@ -94,7 +94,8 @@ export async function fetchDownloadUrls(
       const dlResp = await fetch(postDownloadUrl, {
         method: "POST",
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
+          "Content-Type": "application/x-www-form-urlencoded",
+          "User-Agent": USER_AGENT
         },
         body: formData
       });
