@@ -1,4 +1,4 @@
-import { Asset } from "@shared/types";
+import { Asset, ASSET_SOURCES, AssetSource } from "@shared/types";
 import { useCallback, useState } from "react";
 import { AssetCard } from "@renderer/components/asset-card";
 
@@ -7,6 +7,7 @@ function Home(): React.JSX.Element {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<Asset[]>([]);
   const [error, setError] = useState<Error | null>(null);
+  const [source, setSource] = useState<AssetSource>("kenney.nl");
 
   const searchCallback = useCallback(async () => {
     setLoading(true);
@@ -14,7 +15,7 @@ function Home(): React.JSX.Element {
     setResults([]);
 
     try {
-      const assets = await window.api.searchAssets(query);
+      const assets = await window.api.searchAssets(query, source);
       setResults(assets);
     } catch (error) {
       setError(error instanceof Error ? error : new Error(String(error)));
@@ -33,6 +34,18 @@ function Home(): React.JSX.Element {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
+
+        <select
+          value={source}
+          className="select join flex items-center"
+          onChange={(e) => setSource(e.target.value as AssetSource)}
+        >
+          {ASSET_SOURCES.map((e) => (
+            <option key={e} value={e}>
+              {e}
+            </option>
+          ))}
+        </select>
 
         <button className="btn btn-primary join-item" onClick={searchCallback} disabled={loading}>
           {loading ? "Searching..." : "Search"}

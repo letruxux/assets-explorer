@@ -2,12 +2,12 @@ import { app, shell, BrowserWindow, ipcMain, dialog } from "electron";
 import { dirname, join, resolve, sep } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
-import { getOnKenneyNl, searchOnKenneyNl } from "./lib/search";
+import { getOnKenneyNl, searchOnItchIo, searchOnKenneyNl } from "./lib/search";
 import * as fs from "fs";
 import { settings } from "./lib/settings";
 import { getAssetsManifest } from "./lib/assets-manifest";
 import JSZip from "jszip";
-import { Asset, KenneyAsset, Scored } from "@shared/types";
+import { Asset, AssetPreview, AssetSource } from "@shared/types";
 import { fetchAllKenneyAssets } from "./lib/kenney-api";
 
 function createWindow(): void {
@@ -48,19 +48,29 @@ app.whenReady().then(() => {
   });
 
   ipcMain.on("ping", (event) => event.reply("pong"));
-  ipcMain.handle("search", async (_event, query: string): Promise<Scored<KenneyAsset>[]> => {
-    if (!query)
-      return await fetchAllKenneyAssets().then((e) =>
-        e.map((e) => ({
-          ...e,
-          __score: 0,
-          _asset_source: "kenney.nl",
-          id: e.slug + "|kenney.nl"
-        }))
-      );
-    const results = await searchOnKenneyNl(query);
-    return results;
-  });
+  ipcMain.handle(
+    "search",
+    async (_event, query: string, source: AssetSource = "kenney.nl"): Promise<AssetPreview[]> => {
+      switch (source) {
+        case "kenney.nl":
+          if (!query)
+            return await fetchAllKenneyAssets().then((e) =>
+              e.map((e) => ({
+                ...e,
+                __score: 0,
+                _asset_source: "kenney.nl",
+                id: e.slug + "|kenney.nl"
+              }))
+            );
+          return await searchOnKenneyNl(query);
+        case "itch.io":
+          if (!query) return [];
+          return await searchOnItchIo(query);
+        default:
+          throw new Error("Unknown asset source");
+      }
+    }
+  );
 
   ipcMain.handle("open-asset-folder", async (_event, assetId: string) => {
     const assetsManifest = getAssetsManifest();
@@ -106,7 +116,7 @@ app.whenReady().then(() => {
     }
   }
 
-  ipcMain.handle("asset-download", async (_event, asset: Asset) => {
+  ipcMain.handle("asset-download", async (_event, asset: Asset | AssetPreview) => {
     const { _asset_source: source, slug } = asset;
 
     const assetsPath = settings.get("assetsPath");
@@ -166,8 +176,20 @@ app.whenReady().then(() => {
         throw new Error("No assets manifest");
       }
 
+      const fullAsset = await (async () => {
+        switch (source) {
+          case "kenney.nl":
+            return await getOnKenneyNl(slug);
+          case "itch.io":
+            throw new Error("Unknown asset source");
+
+          default:
+            throw new Error("Unknown asset source");
+        }
+      })();
+
       manifest.data.installedAssets.push({
-        cachedAsset: asset,
+        cachedAsset: fullAsset,
         installDate: new Date().toISOString(),
         installPath: targetFolder
       });

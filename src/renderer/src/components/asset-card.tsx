@@ -1,13 +1,19 @@
 import { useInstalledAssetIds } from "@renderer/hooks/use-installed-asset-ids";
 import { cn } from "@renderer/lib/utils";
 import { useInstalledAssetsStore } from "@renderer/store/installed-assets";
-import { Asset } from "@shared/types";
+import { AssetPreview } from "@shared/types";
 import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Spinner from "./spinner";
 import { Folder, Trash2 } from "lucide-react";
 
-export function AssetCard({ result, query }: { result: Asset; query?: string }): React.JSX.Element {
+export function AssetCard({
+  result,
+  query
+}: {
+  result: AssetPreview;
+  query?: string;
+}): React.JSX.Element {
   const { installedAssetIds } = useInstalledAssetIds();
   const { addInstalledAssetId, removeInstalledAssetId } = useInstalledAssetsStore();
   const [downloading, setDownloading] = useState(false);
@@ -78,25 +84,37 @@ export function AssetCard({ result, query }: { result: Asset; query?: string }):
           "border-green-400": isDownloaded
         })}
       >
-        <figure className="aspect-video overflow-hidden">
+        <figure
+          className={cn("overflow-hidden", {
+            "aspect-video": result._asset_source === "kenney.nl",
+            "aspect-[4/3]": result._asset_source === "itch.io"
+          })}
+        >
           <img src={result.images[0]} alt={result.title} className="h-full w-full object-cover" />
         </figure>
         <div className="card-body">
-          <h2 className="card-title">{result.title}</h2>
-
-          <div className="flex gap-x-2 w-full overflow-auto scrollbar-none">
-            {result.meta.Tags.map((e) => (
-              <span
-                className={cn("badge", {
-                  "badge-primary": tagsInQuery.includes(e.toLowerCase()),
-                  "badge-dash": !tagsInQuery.includes(e.toLowerCase())
-                })}
-                key={e}
-              >
-                {e.toTitleCase()}
-              </span>
-            ))}
+          <div className="mb-1">
+            <h2 className="card-title">{result.title}</h2>
+            {result._asset_source === "itch.io" && (
+              <h4 className="text-gray-400">{result.author}</h4>
+            )}
           </div>
+
+          {result._asset_source === "kenney.nl" && (
+            <div className="flex gap-x-2 w-full overflow-auto scrollbar-none">
+              {result.meta.Tags.map((e) => (
+                <span
+                  className={cn("badge", {
+                    "badge-primary": tagsInQuery.includes(e.toLowerCase()),
+                    "badge-dash": !tagsInQuery.includes(e.toLowerCase())
+                  })}
+                  key={e}
+                >
+                  {e.toTitleCase()}
+                </span>
+              ))}
+            </div>
+          )}
           <div className="card-actions mt-2 flex justify-end">
             {downloadError && <span className="text-error">{downloadError.message}</span>}
             {deleteError && <span className="text-error">{deleteError.message}</span>}

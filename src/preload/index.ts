@@ -1,10 +1,10 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { electronAPI } from "@electron-toolkit/preload";
-import { Asset, AssetsManifestType, SettingsType } from "@shared/types";
+import { Asset, AssetPreview, AssetsManifestType, AssetSource, SettingsType } from "@shared/types";
 
 const api = {
-  searchAssets(query: string): Promise<Asset[]> {
-    return ipcRenderer.invoke("search", query);
+  searchAssets(query: string, sources: AssetSource): Promise<Asset[]> {
+    return ipcRenderer.invoke("search", query, sources);
   },
   fetchAssetDetail(source: string, slug: string): Promise<Asset> {
     return ipcRenderer.invoke("asset-detail", source, slug);
@@ -12,8 +12,7 @@ const api = {
   getInstalledAssetsIds(): Promise<string[]> {
     return ipcRenderer.invoke("get-installed-assets-ids");
   },
-
-  downloadAsset(asset: Asset) {
+  downloadAsset(asset: Asset | AssetPreview) {
     return ipcRenderer.invoke("asset-download", asset);
   },
   readSettings(): Promise<SettingsType> {
