@@ -1,5 +1,5 @@
-import { Asset } from "@shared/types";
-import { useEffect, useState } from "react";
+import { Asset, parseId } from "@shared/types";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -8,12 +8,23 @@ import { Navigation, Pagination, A11y } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import { ExternalLink } from "lucide-react";
+import { useInstalledAssetIds } from "@renderer/hooks/use-installed-asset-ids";
 
 function ViewAsset(): React.JSX.Element {
   const { id } = useParams();
+  const { installedAssetIds, refetch } = useInstalledAssetIds();
   const [asset, setAsset] = useState<Asset | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<Error | null>(null);
+
+  const downloaded = useMemo(
+    () => (asset ? installedAssetIds.includes(asset?.id) : false),
+    [installedAssetIds, asset]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -48,6 +59,23 @@ function ViewAsset(): React.JSX.Element {
     };
   }, [id]);
 
+  const downloadFileCallback = useCallback(
+    async (file: Asset["downloads"][number]) => {
+      if (!asset) return;
+      setDownloading(true);
+      setDownloadError(null);
+      try {
+        await window.api.downloadFile(file.url, file.name, asset.id);
+      } catch (err) {
+        setDownloadError(err instanceof Error ? err : new Error(String(err)));
+      } finally {
+        setDownloading(false);
+      }
+      await refetch();
+    },
+    [asset]
+  );
+
   if (loading) {
     return <div className="p-4">Loading...</div>;
   }
@@ -60,29 +88,22 @@ function ViewAsset(): React.JSX.Element {
     return <div className="p-4">Asset not found</div>;
   }
 
-  if (!asset.images?.length) {
-    return (
-      <div className="p-4">
-        <h1 className="text-2xl font-bold">{asset.title}</h1>
-        <p className="mt-4">No images available.</p>
-      </div>
-    );
-  }
-
   return (
     <div className="p-4">
-      <button
-        className="btn fixed bottom-5 right-5 btn-primary z-10"
-        onClick={() => window.api.downloadAsset(asset)}
-      >
-        DL
-      </button>
       <h1 className="text-2xl font-bold flex gap-x-2 items-center mb-1">
         <button className="btn btn-sm btn-square" onClick={() => navigation.back()}>
           &lt;
         </button>
-        <span>
-          {asset.title} <small className="text-gray-500 text-xs">#{asset.id}</small>
+        <span className="flex items-center gap-x-2">
+          <a
+            href={parseId(asset.id).pageUrl}
+            rel="noreferrer"
+            target="_blank"
+            className="flex items-center gap-x-2 hover:underline"
+          >
+            {asset.title} <ExternalLink className="inline" />{" "}
+          </a>
+          <small className="text-gray-500 text-xs">#{asset.id}</small>
         </span>
       </h1>
       <h3 className="mb-4">
@@ -99,8 +120,8 @@ function ViewAsset(): React.JSX.Element {
         className="w-full max-w-2xl aspect-video"
       >
         {asset.images.map((image, index) => (
-          <SwiperSlide key={`${image}-${index}`}>
-            <div className="flex items-center justify-center overflow-hidden rounded-lg bg-black">
+          <SwiperSlide key={`${image}-${index}`} className="flex items-center justify-center">
+            <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-black">
               <img
                 src={image}
                 alt={`${asset.title} preview ${index + 1}`}
@@ -111,7 +132,7 @@ function ViewAsset(): React.JSX.Element {
         ))}
       </Swiper>
 
-      <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 mt-4">
+      <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 mt-4 w-full">
         <table className="table">
           <tbody>
             {/* row 1 */}
@@ -125,9 +146,9 @@ function ViewAsset(): React.JSX.Element {
                       switch (key) {
                         case "Tags":
                           return (
-                            <div className="gap-x-1 flex">
+                            <div className="gap-x-1 flex overflow-x-auto">
                               {(value as string[]).map((e) => (
-                                <span key={e} className="badge badge-primary">
+                                <span key={e} className="badge badge-primary truncate">
                                   {e.toTitleCase()}
                                 </span>
                               ))}
@@ -148,7 +169,7 @@ function ViewAsset(): React.JSX.Element {
         </table>
       </div>
 
-      {asset._asset_source === "itch.io" && asset.downloads.length > 0 && (
+      {asset.downloads.length > 0 && (
         <>
           <h2 className="pt-4 pb-2 text-2xl font-bold">Downloads</h2>
 
@@ -158,10 +179,19 @@ function ViewAsset(): React.JSX.Element {
                 {/* row 1 */}
                 {asset.downloads.map((dl) => (
                   <tr key={dl.name}>
-                    <td>{dl.name}</td>
-                    <td>{dl.date}</td>
+                    <td className="font-mono flex gap-x-1 items-center h-16">
+                      <span className="px-1 py-0.5 bg-base-200">{dl.name}</span>
+                      <span className="text-xs text-gray-400">({dl.file_size})</span>
+                    </td>
+                    <td>{new Date(dl.date).toLocaleDateString()}</td>
                     <td>
-                      <button>Download</button>
+                      <button
+                        className="btn btn-primary"
+                        disabled={downloading || downloaded}
+                        onClick={() => downloadFileCallback(dl)}
+                      >
+                        Download
+                      </button>
                     </td>
                   </tr>
                 ))}

@@ -15,6 +15,9 @@ const api = {
   downloadAsset(asset: Asset | AssetPreview) {
     return ipcRenderer.invoke("asset-download", asset);
   },
+  downloadFile(url: string, assetName: string, assetId: string) {
+    return ipcRenderer.invoke("download-file", url, assetName, assetId);
+  },
   readSettings(): Promise<SettingsType> {
     return ipcRenderer.invoke("settings-read");
   },

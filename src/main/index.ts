@@ -7,8 +7,10 @@ import * as fs from "fs";
 import { settings } from "./lib/settings";
 import { getAssetsManifest } from "./lib/assets-manifest";
 import JSZip from "jszip";
-import { Asset, AssetPreview, AssetSource, buildId, parseId } from "@shared/types";
+import { AssetPreview, AssetSource, buildId, parseId } from "@shared/types";
 import { fetchAllKenneyAssets } from "./lib/kenney-api";
+import { createExtractorFromFile } from "node-unrar-js";
+import { extname } from "node:path";
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -111,73 +113,188 @@ app.whenReady().then(() => {
     }
   });
 
-  function getDownloadUrl(id: string): Promise<string> {
-    const { source, slug, pageUrl } = parseId(id);
+  function guessFilename(
+    url: string,
+    assetName: string,
+    assetId: string,
+    headers: Headers
+  ): string {
+    const { source } = parseId(assetId);
+
+    const hasExtension = (filename: string): boolean => {
+      return extname(filename) !== "";
+    };
+
+    const getFilenameFromContentDisposition = (): string | null => {
+      const disposition = headers.get("content-disposition");
+      if (!disposition) return null;
+
+      const match = disposition.match(/filename\*?=(?:UTF-8'')?["']?([^"';]+)["']?/i);
+
+      if (!match) return null;
+
+      try {
+        return decodeURIComponent(match[1]);
+      } catch {
+        return match[1];
+      }
+    };
+
+    const getFilenameFromUrl = (): string | null => {
+      try {
+        const pathname = new URL(url).pathname;
+        const filename = decodeURIComponent(pathname.split("/").pop() ?? "");
+        return filename || null;
+      } catch {
+        return null;
+      }
+    };
 
     switch (source) {
-      case "kenney.nl":
-        return getOnKenneyNl(slug).then((e) => e.download_url);
+      case "kenney.nl": {
+        const filename = getFilenameFromUrl();
 
-      case "itch.io":
-        return getOnItchIo(pageUrl).then((e) => e.downloads[0].url);
+        if (filename) return filename;
+
+        throw new Error("Could not determine Kenney asset filename");
+      }
+
+      case "itch.io": {
+        const contentDispositionFilename = getFilenameFromContentDisposition();
+
+        if (contentDispositionFilename && hasExtension(contentDispositionFilename)) {
+          return contentDispositionFilename;
+        }
+
+        if (assetName && hasExtension(assetName)) {
+          return assetName;
+        }
+
+        const urlFilename = getFilenameFromUrl();
+
+        if (urlFilename && hasExtension(urlFilename)) {
+          return urlFilename;
+        }
+
+        throw new Error("Could not determine Itch.io asset filename");
+      }
 
       default:
-        throw new Error("Unknown asset source");
+        throw new Error(`Unknown asset source: ${source}`);
     }
   }
 
-  ipcMain.handle("asset-download", async (_event, asset: Asset | AssetPreview) => {
-    const { _asset_source: source, slug, id } = asset;
+  ipcMain.handle(
+    "download-file",
+    async (_event, url: string, assetName: string, assetId: string) => {
+      const { source, slug, pageUrl } = parseId(assetId);
 
-    const assetsPath = settings.get("assetsPath");
+      const assetsPath = settings.get("assetsPath");
 
-    if (!assetsPath) {
-      throw new Error("No assets path set");
-    }
+      if (!assetsPath) {
+        throw new Error("No assets path set");
+      }
 
-    const url = await getDownloadUrl(id);
-    const response = await fetch(url);
+      const response = await fetch(url);
+      const filename = guessFilename(url, assetName, assetId, response.headers);
 
-    if (!response.ok) {
-      throw new Error(`Failed to download asset: ${response.status} ${response.statusText}`);
-    }
+      if (!response.ok) {
+        throw new Error(`Failed to download asset: ${response.status} ${response.statusText}`);
+      }
 
-    const buf = Buffer.from(await response.arrayBuffer());
+      const buf = Buffer.from(await response.arrayBuffer());
 
-    const filePath = join(assetsPath, `${slug}.zip`);
-    const targetFolder = join(assetsPath, slug);
-
-    await fs.promises.writeFile(filePath, buf);
-
-    try {
-      const zip = await new JSZip().loadAsync(buf);
-
+      const targetFolder = join(assetsPath, slug);
       await fs.promises.mkdir(targetFolder, { recursive: true });
+      const filePath = join(targetFolder, filename);
 
-      const root = resolve(targetFolder);
+      await fs.promises.writeFile(filePath, buf);
 
-      for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
-        const targetPath = resolve(targetFolder, relativePath);
+      if (filename.endsWith(".zip")) {
+        try {
+          const zip = await new JSZip().loadAsync(buf);
 
-        if (targetPath !== root && !targetPath.startsWith(root + sep)) {
-          throw new Error(`Unsafe zip path: ${relativePath}`);
+          const root = resolve(targetFolder);
+
+          for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
+            const targetPath = resolve(targetFolder, relativePath);
+
+            if (targetPath !== root && !targetPath.startsWith(root + sep)) {
+              throw new Error(`Unsafe zip path: ${relativePath}`);
+            }
+
+            if (zipEntry.dir) {
+              await fs.promises.mkdir(targetPath, { recursive: true });
+              continue;
+            }
+
+            await fs.promises.mkdir(dirname(targetPath), { recursive: true });
+
+            await new Promise<void>((resolve, reject) => {
+              const output = fs.createWriteStream(targetPath);
+
+              output.on("finish", resolve);
+              output.on("error", reject);
+
+              zipEntry.nodeStream().on("error", reject).pipe(output);
+            });
+          }
+
+          const manifest = getAssetsManifest();
+
+          if (!manifest) {
+            throw new Error("No assets manifest");
+          }
+
+          const fullAsset = await (async () => {
+            switch (source) {
+              case "kenney.nl":
+                return await getOnKenneyNl(slug);
+              case "itch.io":
+                return await getOnItchIo(pageUrl);
+
+              default:
+                throw new Error("Unknown asset source");
+            }
+          })();
+
+          manifest.data.installedAssets.push({
+            cachedAsset: fullAsset,
+            installDate: new Date().toISOString(),
+            installPath: targetFolder
+          });
+          manifest.save();
+        } finally {
+          await fs.promises.unlink(filePath).catch(() => {});
         }
+      } else if (filename.endsWith(".rar")) {
+        try {
+          const root = resolve(targetFolder);
 
-        if (zipEntry.dir) {
-          await fs.promises.mkdir(targetPath, { recursive: true });
-          continue;
+          const extractor = await createExtractorFromFile({
+            filepath: filePath,
+            targetPath: targetFolder,
+            filenameTransform: (relativePath) => {
+              const targetPath = resolve(targetFolder, relativePath);
+
+              if (targetPath !== root && !targetPath.startsWith(root + sep)) {
+                throw new Error(`Unsafe rar path: ${relativePath}`);
+              }
+
+              return relativePath;
+            }
+          });
+
+          // Force the archive to actually be processed.
+          // node-unrar-js uses lazy iterators.
+          const files = extractor.extract();
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          for (const _file of files.files) {
+            // Iterating is enough to perform extraction.
+          }
+        } finally {
+          await fs.promises.unlink(filePath).catch(() => {});
         }
-
-        await fs.promises.mkdir(dirname(targetPath), { recursive: true });
-
-        await new Promise<void>((resolve, reject) => {
-          const output = fs.createWriteStream(targetPath);
-
-          output.on("finish", resolve);
-          output.on("error", reject);
-
-          zipEntry.nodeStream().on("error", reject).pipe(output);
-        });
       }
 
       const manifest = getAssetsManifest();
@@ -190,8 +307,9 @@ app.whenReady().then(() => {
         switch (source) {
           case "kenney.nl":
             return await getOnKenneyNl(slug);
+
           case "itch.io":
-            throw new Error("Unknown asset source");
+            return await getOnItchIo(pageUrl);
 
           default:
             throw new Error("Unknown asset source");
@@ -203,11 +321,10 @@ app.whenReady().then(() => {
         installDate: new Date().toISOString(),
         installPath: targetFolder
       });
+
       manifest.save();
-    } finally {
-      await fs.promises.unlink(filePath).catch(() => {});
     }
-  });
+  );
 
   ipcMain.handle("get-installed-assets-ids", async () => {
     const manifest = getAssetsManifest();

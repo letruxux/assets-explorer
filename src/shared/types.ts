@@ -21,7 +21,7 @@ export type KenneyAsset = {
   };
   slug: string;
   images: Array<string>;
-  download_url: string;
+  downloads: ItchIoAsset["downloads"];
   _asset_source: "kenney.nl";
   id: string;
 };
@@ -49,6 +49,7 @@ export type ItchIoAsset = {
     date: string;
     name: string;
     url: string;
+    file_size: string;
   }[];
 
   meta: {

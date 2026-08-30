@@ -1,6 +1,5 @@
 import { buildId, ItchIoAsset, ItchIoAssetPreview } from "@shared/types";
 import * as cheerio from "cheerio";
-import { writeFileSync } from "fs";
 import { USER_AGENT } from "./utils";
 
 function buildItchIoSearchUrl(query: string): string {
@@ -74,18 +73,22 @@ export async function fetchDownloadUrls(
   });
   if (!response.ok) throw new Error("Failed to fetch url");
   const downloadPageUrl = (await response.json()) as { url: string };
+  console.log("Found download page url", downloadPageUrl.url);
   const downloadPageResp = await fetch(downloadPageUrl.url, {
     headers: {
       "User-Agent": USER_AGENT
     }
   });
   if (!downloadPageResp.ok) throw new Error("Failed to fetch url");
-  const $$ = cheerio.load(await downloadPageResp.text())("div.uploads .base-widget .upload");
+  console.log("Download page loaded");
+  const $$ = cheerio.load(await downloadPageResp.text())(".upload");
+  console.log("Found", $$.length, "downloads");
   return await Promise.all(
     $$.map(async (_, el) => {
-      const filename = $(el).find("upload_name strong").attr("title");
+      const filename = $(el).find(".upload_name strong").attr("title");
       const uploadId = $(el).find("a.button").attr("data-upload_id");
       const dateStr = weirdDateParser($(el).find(".upload_date abbr").attr("title") ?? "");
+      const file_size = $(el).find(".file_size").text().trim();
       if (!filename || !uploadId || !dateStr) throw new Error("Failed to parse download");
 
       const postDownloadUrl = `${url}/file/${uploadId}?source=game_download`;
@@ -102,6 +105,7 @@ export async function fetchDownloadUrls(
       if (!dlResp.ok) throw new Error("Failed to fetch url");
       const finalUrl = ((await dlResp.json()) as { url: string }).url;
       return {
+        file_size,
         name: filename,
         url: finalUrl,
         date: new Date(dateStr).toISOString()
@@ -125,9 +129,24 @@ export async function fetchItchIoAsset(url: string): Promise<ItchIoAsset> {
 
   const moreInfoTableRows = $(".info_panel_wrapper table tbody tr");
   const _raw_meta: Record<string, string> = {};
+  async function getRatingValue(): Promise<number> {
+    return Number(
+      JSON.parse(
+        $("script[type='application/ld+json']")
+          .filter((i, el) => {
+            const $el = $(el);
+            return $el.text().includes('ratingValue":');
+          })
+          .text()
+      ).ratingValue
+    );
+  }
+  /// @ts-ignore mustard
   const meta: ItchIoAsset["meta"] = {
-    Description: $('meta[name="description"]').attr("content")
+    Description: $('meta[name="description"]').attr("content"),
+    RatingValue: await getRatingValue().catch(() => 0)
   };
+  /// @ts-ignore mustard
   const _extracted: ItchIoAsset["_extracted"] = {};
   for (const row of moreInfoTableRows) {
     const key = $(row).find("td:first-child").text()!;
