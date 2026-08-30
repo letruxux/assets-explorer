@@ -3,7 +3,7 @@ import * as cheerio from "cheerio";
 import { USER_AGENT } from "./utils";
 
 function buildItchIoSearchUrl(query: string): string {
-  const facets = ["c.2"];
+  const facets = ["c.2", "m.free"];
   const url = new URL(`https://itch.io/search`);
   url.searchParams.set("facets", facets.join(","));
   url.searchParams.set("type", "games");
@@ -72,8 +72,12 @@ export async function fetchDownloadUrls(
     body: formData
   });
   if (!response.ok) throw new Error("Failed to fetch url");
-  const downloadPageUrl = (await response.json()) as { url: string };
-  console.log("Found download page url", downloadPageUrl.url);
+  const downloadPageUrl = (await response.json()) as { url?: string; errors?: string[] };
+  if ((downloadPageUrl.errors ?? []).length > 0 || !downloadPageUrl.url) {
+    console.error(downloadPageUrl.errors?.join(", "));
+    return [];
+  }
+
   const downloadPageResp = await fetch(downloadPageUrl.url, {
     headers: {
       "User-Agent": USER_AGENT

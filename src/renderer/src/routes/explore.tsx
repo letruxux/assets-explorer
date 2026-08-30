@@ -1,15 +1,34 @@
-import { Asset, ASSET_SOURCES, AssetSource } from "@shared/types";
-import { useCallback, useState } from "react";
+import { ASSET_SOURCES, AssetSource } from "@shared/types";
+import { useCallback, useEffect } from "react";
 import { AssetCard } from "@renderer/components/asset-card";
+import { useSearchStore } from "@renderer/store/search";
 
 function Home(): React.JSX.Element {
-  const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<Asset[]>([]);
-  const [error, setError] = useState<Error | null>(null);
-  const [source, setSource] = useState<AssetSource>("kenney.nl");
+  const query = useSearchStore((s) => s.query);
+  const source = useSearchStore((s) => s.source);
+  const results = useSearchStore((s) => s.results);
+  const loading = useSearchStore((s) => s.loading);
+  const error = useSearchStore((s) => s.error);
 
-  console.log(source);
+  const setQuery = useSearchStore((s) => s.setQuery);
+  const setSource = useSearchStore((s) => s.setSource);
+  const setResults = useSearchStore((s) => s.setResults);
+  const setLoading = useSearchStore((s) => s.setLoading);
+  const setError = useSearchStore((s) => s.setError);
+  const setScroll = useSearchStore((s) => s.setScroll);
+
+  useEffect(() => {
+    window.scrollTo(useSearchStore.getState().scroll.x, useSearchStore.getState().scroll.y);
+  }, []);
+
+  useEffect(() => {
+    const onScroll = (): void => {
+      setScroll({ x: window.scrollX, y: window.scrollY });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [setScroll]);
+
   const searchCallback = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -23,7 +42,7 @@ function Home(): React.JSX.Element {
     } finally {
       setLoading(false);
     }
-  }, [query]);
+  }, [query, source, setLoading, setError, setResults]);
 
   return (
     <div className="min-h-dvh w-full">
