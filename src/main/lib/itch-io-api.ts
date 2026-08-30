@@ -1,5 +1,6 @@
-import { ItchIoAsset, ItchIoAssetPreview } from "@shared/types";
+import { buildId, ItchIoAsset, ItchIoAssetPreview } from "@shared/types";
 import * as cheerio from "cheerio";
+import { writeFileSync } from "fs";
 
 function buildItchIoSearchUrl(query: string): string {
   const facets = ["c.2"];
@@ -12,7 +13,9 @@ function buildItchIoSearchUrl(query: string): string {
 }
 
 function itchIoUrlToId(url: string): string {
-  return `itch.io|${new URL(url).hostname.split(".")[0]}|${url.split("/").pop()}`;
+  const author = new URL(url).hostname.split(".")[0];
+  const slug = url.split("/").pop()!;
+  return buildId("itch.io", author, slug);
 }
 
 function weirdDateParser(date: string): string {
@@ -54,7 +57,8 @@ export async function fetchDownloadUrls(
   url: string,
   $: cheerio.CheerioAPI
 ): Promise<ItchIoAsset["downloads"]> {
-  const csrfToken = $("meta[name=csrf_token]").attr("content");
+  writeFileSync("MOCCCC.html", $.html());
+  const csrfToken = $('meta[name="csrf_token"]').attr("value");
   if (!csrfToken) throw new Error("No csrf token found");
 
   const postUrl = `${url}/download_url`;

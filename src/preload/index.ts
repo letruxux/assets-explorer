@@ -6,8 +6,8 @@ const api = {
   searchAssets(query: string, sources: AssetSource): Promise<Asset[]> {
     return ipcRenderer.invoke("search", query, sources);
   },
-  fetchAssetDetail(source: string, slug: string): Promise<Asset> {
-    return ipcRenderer.invoke("asset-detail", source, slug);
+  fetchAssetDetail(id: string): Promise<Asset> {
+    return ipcRenderer.invoke("asset-detail", id);
   },
   getInstalledAssetsIds(): Promise<string[]> {
     return ipcRenderer.invoke("get-installed-assets-ids");

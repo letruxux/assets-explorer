@@ -9,6 +9,7 @@ function Home(): React.JSX.Element {
   const [error, setError] = useState<Error | null>(null);
   const [source, setSource] = useState<AssetSource>("kenney.nl");
 
+  console.log(source);
   const searchCallback = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -37,7 +38,7 @@ function Home(): React.JSX.Element {
 
         <select
           value={source}
-          className="select join flex items-center"
+          className="select appearance-none join flex items-center"
           onChange={(e) => setSource(e.target.value as AssetSource)}
         >
           {ASSET_SOURCES.map((e) => (

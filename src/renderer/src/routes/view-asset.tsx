@@ -10,24 +10,22 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 function ViewAsset(): React.JSX.Element {
-  const { source, slug } = useParams();
+  const { id } = useParams();
   const [asset, setAsset] = useState<Asset | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!source || !slug) return;
-
     let cancelled = false;
 
     async function loadAsset(): Promise<void> {
-      if (!source || !slug) return;
+      if (!id) return;
       setLoading(true);
       setError(null);
       setAsset(null);
 
       try {
-        const result = await window.api.fetchAssetDetail(source, slug);
+        const result = await window.api.fetchAssetDetail(id);
 
         if (!cancelled) {
           setAsset(result);
@@ -48,7 +46,7 @@ function ViewAsset(): React.JSX.Element {
     return () => {
       cancelled = true;
     };
-  }, [source, slug]);
+  }, [id]);
 
   if (loading) {
     return <div className="p-4">Loading...</div>;
@@ -73,6 +71,12 @@ function ViewAsset(): React.JSX.Element {
 
   return (
     <div className="p-4">
+      <button
+        className="btn fixed bottom-5 right-5 btn-primary z-10"
+        onClick={() => window.api.downloadAsset(asset)}
+      >
+        DL
+      </button>
       <h1 className="text-2xl font-bold flex gap-x-2 items-center mb-1">
         <button className="btn btn-sm btn-square" onClick={() => navigation.back()}>
           &lt;
@@ -83,7 +87,7 @@ function ViewAsset(): React.JSX.Element {
       </h1>
       <h3 className="mb-4">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        by {(asset as any).author || asset._asset_source} • from {asset._asset_source}
+        by {(asset as any).meta?.Author || asset._asset_source} • from {asset._asset_source}
       </h3>
 
       <Swiper
@@ -143,6 +147,29 @@ function ViewAsset(): React.JSX.Element {
           </tbody>
         </table>
       </div>
+
+      {asset._asset_source === "itch.io" && asset.downloads.length > 0 && (
+        <>
+          <h2 className="pt-4 pb-2 text-2xl font-bold">Downloads</h2>
+
+          <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
+            <table className="table">
+              <tbody>
+                {/* row 1 */}
+                {asset.downloads.map((dl) => (
+                  <tr key={dl.name}>
+                    <td>{dl.name}</td>
+                    <td>{dl.date}</td>
+                    <td>
+                      <button>Download</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </div>
   );
 }

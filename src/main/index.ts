@@ -7,7 +7,7 @@ import * as fs from "fs";
 import { settings } from "./lib/settings";
 import { getAssetsManifest } from "./lib/assets-manifest";
 import JSZip from "jszip";
-import { Asset, AssetPreview, AssetSource } from "@shared/types";
+import { Asset, AssetPreview, AssetSource, buildId, parseId } from "@shared/types";
 import { fetchAllKenneyAssets } from "./lib/kenney-api";
 
 function createWindow(): void {
@@ -59,7 +59,7 @@ app.whenReady().then(() => {
                 ...e,
                 __score: 0,
                 _asset_source: "kenney.nl",
-                id: e.slug + "|kenney.nl"
+                id: buildId("kenney.nl", e.slug)
               }))
             );
           return await searchOnKenneyNl(query);
@@ -96,23 +96,30 @@ app.whenReady().then(() => {
     assetsManifest.save();
   });
 
-  ipcMain.handle("asset-detail", async (_event, source: string, slug: string) => {
+  ipcMain.handle("asset-detail", async (_event, id: string) => {
+    const { source, slug, pageUrl } = parseId(id);
+
     switch (source) {
       case "kenney.nl":
         return await getOnKenneyNl(slug);
 
       case "itch.io":
-        return await getOnItchIo(slug);
+        return await getOnItchIo(pageUrl);
 
       default:
         throw new Error("Unknown asset source");
     }
   });
 
-  function getDownloadUrl(source: string, slug: string): Promise<string> {
+  function getDownloadUrl(id: string): Promise<string> {
+    const { source, slug, pageUrl } = parseId(id);
+
     switch (source) {
       case "kenney.nl":
         return getOnKenneyNl(slug).then((e) => e.download_url);
+
+      case "itch.io":
+        return getOnItchIo(pageUrl).then((e) => e.downloads[0].url);
 
       default:
         throw new Error("Unknown asset source");
@@ -120,7 +127,7 @@ app.whenReady().then(() => {
   }
 
   ipcMain.handle("asset-download", async (_event, asset: Asset | AssetPreview) => {
-    const { _asset_source: source, slug } = asset;
+    const { _asset_source: source, slug, id } = asset;
 
     const assetsPath = settings.get("assetsPath");
 
@@ -128,7 +135,7 @@ app.whenReady().then(() => {
       throw new Error("No assets path set");
     }
 
-    const url = await getDownloadUrl(source, slug);
+    const url = await getDownloadUrl(id);
     const response = await fetch(url);
 
     if (!response.ok) {

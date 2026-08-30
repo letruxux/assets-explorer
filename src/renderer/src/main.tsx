@@ -26,7 +26,7 @@ createRoot(document.getElementById("root")!).render(
           <Route index element={<Home />} />
           <Route path="my-assets" element={<About />} />
           <Route path="settings" element={<Settings />} />
-          <Route path="asset/:source/:slug" element={<ViewAsset />} />
+          <Route path="asset/:id" element={<ViewAsset />} />
         </Route>
       </Routes>
     </HashRouter>

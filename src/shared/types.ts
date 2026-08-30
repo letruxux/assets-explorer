@@ -70,7 +70,7 @@ export type AssetSource = (typeof ASSET_SOURCES)[number];
 
 export type Scored<T> = T & { __score: number };
 
-export type Asset = KenneyAsset;
+export type Asset = KenneyAsset | ItchIoAsset;
 export type AssetPreview = KenneyAsset | ItchIoAssetPreview;
 
 export interface SettingsType {
@@ -83,4 +83,31 @@ export interface AssetsManifestType {
     installDate: string;
     cachedAsset: Asset;
   }[];
+}
+
+export function buildId(source: AssetSource, ...extra: string[]): string {
+  return `${source}|${extra.join("|")}`;
+}
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+export function parseId(id: string) {
+  const [source, ...extra] = id.split("|");
+
+  switch (source) {
+    case "kenney.nl":
+      return {
+        source: "kenney.nl",
+        slug: extra[0],
+        pageUrl: `https://www.kenney.nl/assets/${extra[0]}`
+      };
+    case "itch.io":
+      return {
+        source: "itch.io",
+        author: extra[0],
+        slug: extra[1],
+        pageUrl: `https://${extra[0]}.itch.io/${extra[1]}`
+      };
+  }
+
+  throw new Error("Unknown asset source");
 }

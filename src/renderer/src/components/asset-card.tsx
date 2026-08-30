@@ -78,7 +78,7 @@ export function AssetCard({
   }, [result, addInstalledAssetId]);
 
   return (
-    <Link to={`/asset/${result._asset_source}/${result.slug}`}>
+    <Link to={`/asset/${result.id}`}>
       <article
         className={cn("card w-full bg-base-100 shadow-sm card-border", {
           "border-green-400": isDownloaded
@@ -87,7 +87,7 @@ export function AssetCard({
         <figure
           className={cn("overflow-hidden", {
             "aspect-video": result._asset_source === "kenney.nl",
-            "aspect-[4/3]": result._asset_source === "itch.io"
+            "aspect-4/3": result._asset_source === "itch.io"
           })}
         >
           <img src={result.images[0]} alt={result.title} className="h-full w-full object-cover" />
