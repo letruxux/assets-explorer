@@ -2,7 +2,7 @@ import { app, shell, BrowserWindow, ipcMain, dialog } from "electron";
 import { dirname, join, resolve, sep } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
-import { getOnKenneyNl, searchOnItchIo, searchOnKenneyNl } from "./lib/search";
+import { getOnItchIo, getOnKenneyNl, searchOnItchIo, searchOnKenneyNl } from "./lib/search";
 import * as fs from "fs";
 import { settings } from "./lib/settings";
 import { getAssetsManifest } from "./lib/assets-manifest";
@@ -100,6 +100,9 @@ app.whenReady().then(() => {
     switch (source) {
       case "kenney.nl":
         return await getOnKenneyNl(slug);
+
+      case "itch.io":
+        return await getOnItchIo(slug);
 
       default:
         throw new Error("Unknown asset source");

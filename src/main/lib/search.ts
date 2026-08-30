@@ -1,7 +1,7 @@
 import Fuse from "fuse.js";
 import { fetchAllKenneyAssets, fetchKenneyAsset } from "./kenney-api";
-import { searchOnItchIo } from "./itch-io-api";
-import { KenneyAsset, Scored } from "@shared/types";
+import { fetchItchIoAsset, searchOnItchIo } from "./itch-io-api";
+import { ItchIoAsset, KenneyAsset, Scored } from "@shared/types";
 
 export async function searchOnKenneyNl(query: string): Promise<Scored<KenneyAsset>[]> {
   const all = await fetchAllKenneyAssets();
@@ -31,6 +31,10 @@ export async function getOnKenneyNl(slug: string): Promise<KenneyAsset> {
     _asset_source: "kenney.nl",
     id: slug + "|kenney.nl"
   };
+}
+
+export async function getOnItchIo(slug: string): Promise<ItchIoAsset> {
+  return await fetchItchIoAsset(slug);
 }
 
 export { searchOnItchIo };
