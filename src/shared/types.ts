@@ -26,6 +26,8 @@ export type KenneyAsset = {
   id: string;
 };
 
+export type ItchIoAssetPreview = { title: string; author: string; url: string; image?: string };
+
 export type Scored<T> = T & { __score: number };
 
 export type Asset = KenneyAsset;

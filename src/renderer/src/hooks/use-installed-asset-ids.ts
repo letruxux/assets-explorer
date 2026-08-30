@@ -10,6 +10,14 @@ export function useInstalledAssetIds() {
 
   useEffect(() => {
     loadInstalledAssetIds();
+
+    window.electron.ipcRenderer.on("installed-assets-updated", () => {
+      loadInstalledAssetIds();
+    });
+
+    return () => {
+      window.electron.ipcRenderer.removeAllListeners("installed-assets-updated");
+    };
   }, [loadInstalledAssetIds]);
 
   return {

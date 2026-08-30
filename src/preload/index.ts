@@ -12,8 +12,9 @@ const api = {
   getInstalledAssetsIds(): Promise<string[]> {
     return ipcRenderer.invoke("get-installed-assets-ids");
   },
-  downloadAsset(source: string, slug: string) {
-    return ipcRenderer.invoke("asset-download", source, slug);
+
+  downloadAsset(asset: Asset) {
+    return ipcRenderer.invoke("asset-download", asset);
   },
   readSettings(): Promise<SettingsType> {
     return ipcRenderer.invoke("settings-read");
@@ -23,6 +24,12 @@ const api = {
   },
   readAssetsManifest(): Promise<AssetsManifestType | null> {
     return ipcRenderer.invoke("assetsmanifest-read");
+  },
+  openAssetFolder(assetId: string) {
+    return ipcRenderer.invoke("open-asset-folder", assetId);
+  },
+  deleteAsset(assetId: string) {
+    return ipcRenderer.invoke("delete-asset", assetId);
   }
 };
 

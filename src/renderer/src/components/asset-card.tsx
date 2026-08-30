@@ -1,0 +1,145 @@
+import { useInstalledAssetIds } from "@renderer/hooks/use-installed-asset-ids";
+import { cn } from "@renderer/lib/utils";
+import { useInstalledAssetsStore } from "@renderer/store/installed-assets";
+import { Asset } from "@shared/types";
+import { useState, useMemo, useCallback } from "react";
+import { Link } from "react-router-dom";
+import Spinner from "./spinner";
+import { Folder, Trash2 } from "lucide-react";
+
+export function AssetCard({ result, query }: { result: Asset; query?: string }): React.JSX.Element {
+  const { installedAssetIds } = useInstalledAssetIds();
+  const { addInstalledAssetId, removeInstalledAssetId } = useInstalledAssetsStore();
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<Error | null>(null);
+
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<Error | null>(null);
+
+  const openAssetFolderCallback = useCallback(async () => {
+    setDeleting(true);
+    setDeleteError(null);
+
+    try {
+      await window.api.openAssetFolder(result.id);
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error : new Error(String(error)));
+    } finally {
+      setDeleting(false);
+    }
+  }, [result]);
+
+  const deleteCallback = useCallback(async () => {
+    setDeleting(true);
+    setDeleteError(null);
+
+    try {
+      await window.api.deleteAsset(result.id);
+      removeInstalledAssetId(result.id);
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error : new Error(String(error)));
+    } finally {
+      setDeleting(false);
+    }
+  }, [result, removeInstalledAssetId]);
+
+  const tagsInQuery = useMemo(
+    () =>
+      (query ?? "")
+        .toLowerCase()
+        .split(" ")
+        .filter((e) => e.length > 0),
+    [query]
+  );
+
+  const isDownloaded = useMemo(
+    () => installedAssetIds.includes(result.id),
+    [installedAssetIds, result.id]
+  );
+
+  const downloadCallback = useCallback(async () => {
+    setDownloading(true);
+    setDownloadError(null);
+
+    try {
+      await window.api.downloadAsset(result);
+      addInstalledAssetId(result.id);
+    } catch (error) {
+      setDownloadError(error instanceof Error ? error : new Error(String(error)));
+    } finally {
+      setDownloading(false);
+    }
+  }, [result, addInstalledAssetId]);
+
+  return (
+    <Link to={`/asset/${result._asset_source}/${result.slug}`}>
+      <article
+        className={cn("card w-full bg-base-100 shadow-sm card-border", {
+          "border-green-400": isDownloaded
+        })}
+      >
+        <figure className="aspect-video overflow-hidden">
+          <img src={result.images[0]} alt={result.title} className="h-full w-full object-cover" />
+        </figure>
+        <div className="card-body">
+          <h2 className="card-title">{result.title}</h2>
+
+          <div className="flex gap-x-2 w-full overflow-auto scrollbar-none">
+            {result.meta.Tags.map((e) => (
+              <span
+                className={cn("badge", {
+                  "badge-primary": tagsInQuery.includes(e.toLowerCase()),
+                  "badge-dash": !tagsInQuery.includes(e.toLowerCase())
+                })}
+                key={e}
+              >
+                {e.toTitleCase()}
+              </span>
+            ))}
+          </div>
+          <div className="card-actions mt-2 flex justify-end">
+            {downloadError && <span className="text-error">{downloadError.message}</span>}
+            {deleteError && <span className="text-error">{deleteError.message}</span>}
+            {!isDownloaded && (
+              <button
+                className="btn btn-square"
+                disabled={isDownloaded || downloading}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  downloadCallback();
+                }}
+              >
+                {downloading ? <Spinner /> : "DL"}
+              </button>
+            )}
+            {isDownloaded && (
+              <button
+                className="btn btn-square btn-error btn-ghost"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  deleteCallback();
+                }}
+              >
+                {deleting ? <Spinner /> : <Trash2 />}
+              </button>
+            )}
+            {isDownloaded && (
+              <button
+                className="btn btn-square"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  openAssetFolderCallback();
+                }}
+              >
+                <Folder />
+              </button>
+            )}
+          </div>
+        </div>
+      </article>
+    </Link>
+  );
+}

@@ -22,7 +22,7 @@ export async function searchOnKenneyNl(query: string): Promise<Scored<KenneyAsse
       _asset_source: "kenney.nl",
       id: i.item.slug + "|kenney.nl"
     }))
-    .filter((i) => i.__score > 0.3) as Scored<KenneyAsset>[];
+    .filter((i) => i.__score > 0.2) as Scored<KenneyAsset>[];
 }
 
 export async function getOnKenneyNl(slug: string): Promise<KenneyAsset> {

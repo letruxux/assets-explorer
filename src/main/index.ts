@@ -1,11 +1,14 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from "electron";
-import { join } from "path";
+import { dirname, join, resolve, sep } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
 import { getOnKenneyNl, searchOnKenneyNl } from "./lib/search";
 import * as fs from "fs";
 import { settings } from "./lib/settings";
 import { getAssetsManifest } from "./lib/assets-manifest";
+import JSZip from "jszip";
+import { Asset, KenneyAsset, Scored } from "@shared/types";
+import { fetchAllKenneyAssets } from "./lib/kenney-api";
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -45,9 +48,42 @@ app.whenReady().then(() => {
   });
 
   ipcMain.on("ping", (event) => event.reply("pong"));
-  ipcMain.handle("search", async (_event, query: string) => {
+  ipcMain.handle("search", async (_event, query: string): Promise<Scored<KenneyAsset>[]> => {
+    if (!query)
+      return await fetchAllKenneyAssets().then((e) =>
+        e.map((e) => ({
+          ...e,
+          __score: 0,
+          _asset_source: "kenney.nl",
+          id: e.slug + "|kenney.nl"
+        }))
+      );
     const results = await searchOnKenneyNl(query);
     return results;
+  });
+
+  ipcMain.handle("open-asset-folder", async (_event, assetId: string) => {
+    const assetsManifest = getAssetsManifest();
+    if (!assetsManifest) throw new Error("No assets manifest");
+
+    const asset = assetsManifest.data.installedAssets.find((e) => e.cachedAsset.id === assetId);
+    if (!asset) throw new Error("Asset not found");
+
+    shell.openPath(asset.installPath);
+  });
+
+  ipcMain.handle("delete-asset", async (_event, assetId: string) => {
+    const assetsManifest = getAssetsManifest();
+    if (!assetsManifest) throw new Error("No assets manifest");
+
+    const asset = assetsManifest.data.installedAssets.find((e) => e.cachedAsset.id === assetId);
+    if (!asset) throw new Error("Asset not found");
+
+    await fs.promises.unlink(asset.installPath);
+    assetsManifest.data.installedAssets = assetsManifest.data.installedAssets.filter(
+      (e) => e.cachedAsset.id !== assetId
+    );
+    assetsManifest.save();
   });
 
   ipcMain.handle("asset-detail", async (_event, source: string, slug: string) => {
@@ -70,14 +106,75 @@ app.whenReady().then(() => {
     }
   }
 
-  ipcMain.handle("asset-download", async (_event, source: string, slug: string) => {
-    if (!settings.get("assetsPath")) throw new Error("No assets path set");
+  ipcMain.handle("asset-download", async (_event, asset: Asset) => {
+    const { _asset_source: source, slug } = asset;
+
+    const assetsPath = settings.get("assetsPath");
+
+    if (!assetsPath) {
+      throw new Error("No assets path set");
+    }
+
     const url = await getDownloadUrl(source, slug);
-    const buf = await fetch(url)
-      .then((e) => e.arrayBuffer())
-      .then(Buffer.from);
-    const filePath = join(settings.get("assetsPath"), `${slug}.zip`);
-    fs.writeFileSync(filePath, buf);
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Failed to download asset: ${response.status} ${response.statusText}`);
+    }
+
+    const buf = Buffer.from(await response.arrayBuffer());
+
+    const filePath = join(assetsPath, `${slug}.zip`);
+    const targetFolder = join(assetsPath, slug);
+
+    await fs.promises.writeFile(filePath, buf);
+
+    try {
+      const zip = await new JSZip().loadAsync(buf);
+
+      await fs.promises.mkdir(targetFolder, { recursive: true });
+
+      const root = resolve(targetFolder);
+
+      for (const [relativePath, zipEntry] of Object.entries(zip.files)) {
+        const targetPath = resolve(targetFolder, relativePath);
+
+        if (targetPath !== root && !targetPath.startsWith(root + sep)) {
+          throw new Error(`Unsafe zip path: ${relativePath}`);
+        }
+
+        if (zipEntry.dir) {
+          await fs.promises.mkdir(targetPath, { recursive: true });
+          continue;
+        }
+
+        await fs.promises.mkdir(dirname(targetPath), { recursive: true });
+
+        await new Promise<void>((resolve, reject) => {
+          const output = fs.createWriteStream(targetPath);
+
+          output.on("finish", resolve);
+          output.on("error", reject);
+
+          zipEntry.nodeStream().on("error", reject).pipe(output);
+        });
+      }
+
+      const manifest = getAssetsManifest();
+
+      if (!manifest) {
+        throw new Error("No assets manifest");
+      }
+
+      manifest.data.installedAssets.push({
+        cachedAsset: asset,
+        installDate: new Date().toISOString(),
+        installPath: targetFolder
+      });
+      manifest.save();
+    } finally {
+      await fs.promises.unlink(filePath).catch(() => {});
+    }
   });
 
   ipcMain.handle("get-installed-assets-ids", async () => {

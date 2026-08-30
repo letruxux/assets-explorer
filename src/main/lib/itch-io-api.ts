@@ -1,3 +1,4 @@
+import { ItchIoAssetPreview } from "@shared/types";
 import * as cheerio from "cheerio";
 
 function buildItchIoSearchUrl(query: string): string {
@@ -10,9 +11,7 @@ function buildItchIoSearchUrl(query: string): string {
   return url.toString();
 }
 
-export async function searchOnItchIo(
-  query: string
-): Promise<Array<{ title: string; author: string; url: string; image?: string }>> {
+export async function searchOnItchIo(query: string): Promise<ItchIoAssetPreview[]> {
   const url = buildItchIoSearchUrl(query);
   const response = await fetch(url);
   if (!response.ok) throw new Error("Failed to fetch assets");

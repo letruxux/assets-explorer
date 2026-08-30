@@ -2,6 +2,7 @@ import { AssetsManifestType } from "@shared/types";
 import fs from "fs";
 import { join } from "path";
 import { settings } from "./settings";
+import { ipcMain } from "electron";
 
 class AssetsManifestFile {
   public data: AssetsManifestType;
@@ -19,6 +20,9 @@ class AssetsManifestFile {
   }
 
   public save(): void {
+    setTimeout(() => {
+      ipcMain.emit("installed-assets-updated");
+    }, 100);
     fs.writeFileSync(this.path, JSON.stringify(this.data, null, 2));
   }
 }
@@ -28,7 +32,6 @@ let assetsManifestFile: AssetsManifestFile | null = null;
 export function getAssetsManifest(): AssetsManifestFile | null {
   if (!assetsManifestFile) {
     try {
-      console.log(settings.get("assetsPath"));
       assetsManifestFile = new AssetsManifestFile(join(settings.get("assetsPath"), ".assets.json"));
     } catch (err) {
       console.error(err);

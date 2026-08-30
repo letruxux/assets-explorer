@@ -6,6 +6,8 @@ interface InstalledAssetsState {
   error: Error | null;
   initialized: boolean;
   loadInstalledAssetIds: () => Promise<void>;
+  addInstalledAssetId: (id: string) => void;
+  removeInstalledAssetId: (id: string) => void;
 }
 
 export const useInstalledAssetsStore = create<InstalledAssetsState>((set, get) => ({
@@ -14,13 +16,27 @@ export const useInstalledAssetsStore = create<InstalledAssetsState>((set, get) =
   error: null,
   initialized: false,
 
-  loadInstalledAssetIds: async () => {
-    if (get().initialized || get().loading) return;
+  removeInstalledAssetId: (id: string) => {
+    set((state) => ({
+      installedAssetIds: state.installedAssetIds.filter((e) => e !== id)
+    }));
+  },
 
-    set({ loading: true, error: null });
+  addInstalledAssetId: (id: string) => {
+    set((state) => ({
+      installedAssetIds: [...state.installedAssetIds, id]
+    }));
+  },
+
+  loadInstalledAssetIds: async () => {
+    if (get().loading) return;
+    console.log("Updating installed asset IDs list");
+
+    set({ loading: true, error: null, initialized: false });
 
     try {
       const installedAssetIds = await window.api.getInstalledAssetsIds();
+      console.log("Installed asset IDs", installedAssetIds);
       set({ installedAssetIds, initialized: true });
     } catch (error) {
       set({ error: error instanceof Error ? error : new Error(String(error)) });
