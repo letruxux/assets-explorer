@@ -1,4 +1,4 @@
-import { ItchIoAssetPreview } from "@shared/types";
+import { ItchIoAsset, ItchIoAssetPreview } from "@shared/types";
 import * as cheerio from "cheerio";
 
 function buildItchIoSearchUrl(query: string): string {
@@ -13,6 +13,10 @@ function buildItchIoSearchUrl(query: string): string {
 
 function itchIoUrlToId(url: string): string {
   return `itch.io|${new URL(url).hostname.split(".")[0]}|${url.split("/").pop()}`;
+}
+
+function weirdDateParser(date: string): string {
+  return new Date(date.replace(" @ ", " ")).toISOString();
 }
 
 export async function searchOnItchIo(query: string): Promise<ItchIoAssetPreview[]> {
@@ -46,25 +50,136 @@ export async function searchOnItchIo(query: string): Promise<ItchIoAssetPreview[
     .get();
 }
 
-export async function fetchItchIoAsset(url: string): Promise<ItchIoAssetPreview> {
+export async function fetchDownloadUrls(
+  url: string,
+  $: cheerio.CheerioAPI
+): Promise<ItchIoAsset["downloads"]> {
+  const csrfToken = $("meta[name=csrf_token]").attr("content");
+  if (!csrfToken) throw new Error("No csrf token found");
+
+  const postUrl = `${url}/download_url`;
+  const formData = new FormData();
+  formData.append("csrf_token", csrfToken);
+  const response = await fetch(postUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: formData
+  });
+  if (!response.ok) throw new Error("Failed to fetch url");
+  const downloadPageUrl = (await response.json()) as { url: string };
+  const downloadPageResp = await fetch(downloadPageUrl.url, {
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36"
+    }
+  });
+  if (!downloadPageResp.ok) throw new Error("Failed to fetch url");
+  const $$ = cheerio.load(await downloadPageResp.text())("div.uploads .base-widget .upload");
+  return await Promise.all(
+    $$.map(async (_, el) => {
+      const filename = $(el).find("upload_name strong").attr("title");
+      const uploadId = $(el).find("a.button").attr("data-upload_id");
+      const dateStr = weirdDateParser($(el).find(".upload_date abbr").attr("title") ?? "");
+      if (!filename || !uploadId || !dateStr) throw new Error("Failed to parse download");
+
+      const postDownloadUrl = `${url}/file/${uploadId}?source=game_download`;
+      const formData = new FormData();
+      formData.append("csrf_token", csrfToken);
+      const dlResp = await fetch(postDownloadUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: formData
+      });
+      if (!dlResp.ok) throw new Error("Failed to fetch url");
+      const finalUrl = ((await dlResp.json()) as { url: string }).url;
+      return {
+        name: filename,
+        url: finalUrl,
+        date: new Date(dateStr).toISOString()
+      };
+    }).get()
+  );
+}
+
+export async function fetchItchIoAsset(url: string): Promise<ItchIoAsset> {
   const response = await fetch(url);
   if (!response.ok) throw new Error("Failed to fetch assets");
   const html = await response.text();
   const $ = cheerio.load(html);
-  const images = $("img.lazy_loaded")
-    .map((i, el) =>
-      $(el).attr("data-lazy_src")?.endsWith(".gif")
-        ? $(el).attr("data-lazy_src")
-        : $(el).attr("data-lazy_src")
-    )
+  const vgPage = $(".view_game_page");
+  const images = vgPage
+    .find(".screenshot_list img")
+    .map((i, el) => {
+      return $(el).attr("src")!;
+    })
     .get();
+
+  const moreInfoTableRows = $(".info_panel_wrapper table tbody tr");
+  const _raw_meta: Record<string, string> = {};
+  const meta: ItchIoAsset["meta"] = {
+    Description: $('meta[name="description"]').attr("content")
+  };
+  const _extracted: ItchIoAsset["_extracted"] = {};
+  for (const row of moreInfoTableRows) {
+    const key = $(row).find("td:first-child").text()!;
+    const valCell = $(row).find("td:last-child");
+    _raw_meta[key] = valCell.html()!;
+
+    switch (key) {
+      case "Updated":
+        _extracted["updatedAt"] = weirdDateParser(valCell.find("abbr").attr("title")!);
+        break;
+      case "Published":
+        _extracted["createdAt"] = weirdDateParser(valCell.find("abbr").attr("title")!);
+        break;
+      case "Tags":
+        meta.Tags = $(valCell)
+          .find("a")
+          .map((i, el) => $(el).text())
+          .get();
+        break;
+      case "Asset license":
+        meta.License = $(valCell).text().trim();
+        break;
+      case "Rating":
+        meta.RatingCount = Number($(valCell).find(".rating_count").attr("content") || "0");
+        break;
+      default:
+        meta[key] = $(valCell).text();
+        break;
+    }
+  }
+
+  const updates = $("#devlog ul li")
+    .map((i, el) => {
+      const $el = $(el);
+      const date = weirdDateParser($el.find(".post_date abbr").attr("title")!);
+      const name = $el.find("a").text();
+      const url = $el.find("a").attr("href")!;
+      return {
+        name,
+        url,
+        date
+      };
+    })
+    .get();
+
+  const downloads = await fetchDownloadUrls(url, $);
   return {
-    title: $("h1.game-title").text(),
+    title: $("title").text(),
     author: $("div.game_author a").text(),
     url,
     slug: itchIoUrlToId(url),
     images,
     id: itchIoUrlToId(url),
-    _asset_source: "itch.io" as const
-  };
+    _asset_source: "itch.io" as const,
+    downloads,
+    meta,
+    _extracted,
+    updates
+  } satisfies ItchIoAsset;
 }
