@@ -1,6 +1,7 @@
-import { buildId, ItchIoAsset, ItchIoAssetPreview } from "@shared/types";
+import { buildId } from "@shared/types";
 import * as cheerio from "cheerio";
 import { USER_AGENT } from "./utils";
+import { ItchIoAssetPreview, ItchIoAsset } from "./server-types";
 
 function buildItchIoSearchUrl(query: string): string {
   const facets = ["c.2", "m.free"];
