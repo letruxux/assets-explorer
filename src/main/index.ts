@@ -258,12 +258,11 @@ app.whenReady().then(() => {
             }
           })();
 
-          manifest.data.installedAssets.push({
+          manifest.add({
             cachedAsset: fullAsset,
             installDate: new Date().toISOString(),
             installPath: targetFolder
           });
-          manifest.save();
         } finally {
           await fs.promises.unlink(filePath).catch(() => {});
         }
@@ -316,13 +315,11 @@ app.whenReady().then(() => {
         }
       })();
 
-      manifest.data.installedAssets.push({
+      manifest.add({
         cachedAsset: fullAsset,
         installDate: new Date().toISOString(),
         installPath: targetFolder
       });
-
-      manifest.save();
     }
   );
 

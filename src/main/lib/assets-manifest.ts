@@ -25,6 +25,18 @@ class AssetsManifestFile {
     }, 100);
     fs.writeFileSync(this.path, JSON.stringify(this.data, null, 2));
   }
+
+  public remove(assetId: string): void {
+    this.data.installedAssets = this.data.installedAssets.filter(
+      (e) => e.cachedAsset.id !== assetId
+    );
+    this.save();
+  }
+
+  public add(asset: AssetsManifestType["installedAssets"][number]): void {
+    this.data.installedAssets.push(asset);
+    this.save();
+  }
 }
 
 let assetsManifestFile: AssetsManifestFile | null = null;
