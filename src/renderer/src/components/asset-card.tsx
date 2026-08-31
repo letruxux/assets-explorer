@@ -100,9 +100,9 @@ export function AssetCard({
             )}
           </div>
 
-          {result._asset_source === "kenney.nl" && (
+          {result.tags.length > 0 && (
             <div className="flex gap-x-2 w-full overflow-auto scrollbar-none">
-              {result.meta.Tags.map((e) => (
+              {result.tags.map((e) => (
                 <span
                   className={cn("badge", {
                     "badge-primary": tagsInQuery.includes(e.toLowerCase()),

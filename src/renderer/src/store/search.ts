@@ -1,16 +1,16 @@
-import { Asset, AssetSource } from "@shared/types";
+import { AssetPreview, AssetSource } from "@shared/types";
 import { create } from "zustand";
 
 interface SearchState {
   query: string;
   source: AssetSource;
-  results: Asset[];
+  results: AssetPreview[];
   loading: boolean;
   error: Error | null;
   scroll: { x: number; y: number };
   setQuery: (query: string) => void;
   setSource: (source: AssetSource) => void;
-  setResults: (results: Asset[]) => void;
+  setResults: (results: AssetPreview[]) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: Error | null) => void;
   setScroll: (scroll: { x: number; y: number }) => void;

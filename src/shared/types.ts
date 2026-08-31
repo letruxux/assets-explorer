@@ -71,8 +71,71 @@ export type AssetSource = (typeof ASSET_SOURCES)[number];
 
 export type Scored<T> = T & { __score: number };
 
-export type Asset = KenneyAsset | ItchIoAsset;
-export type AssetPreview = KenneyAsset | ItchIoAssetPreview;
+export interface AssetPreview {
+  /** what website this asset is from  */
+  _asset_source: AssetSource;
+  title: string;
+  author?: string;
+  /** page url, for user view */
+  page_url: string;
+  images: string[];
+  /** generated with buildId() */
+  id: string;
+  tags: string[];
+}
+
+export interface AssetMetadata {
+  tags?: string[];
+  category?: string;
+  series?: string;
+  tile_size?: string;
+  files?: number;
+  license?: string;
+  features?: string[];
+
+  rating_value?: number;
+  rating_count?: number;
+  description?: string;
+
+  [key: string]: unknown;
+}
+export interface Asset {
+  /** what website this asset is from  */
+  _asset_source: AssetSource;
+  title: string;
+  author: string;
+  /** page url, for user view */
+  page_url: string;
+  images: string[];
+  /** generated with buildId() */
+  id: string;
+
+  files: {
+    /** asset name */
+    name: string;
+    /** when the file was uplaoded */
+    date?: string;
+    /** DIRECT download url */
+    direct_url: string;
+    /** download count */
+    download_count?: number;
+    /** file size, like "2 MB" */
+    file_size?: string;
+  }[];
+
+  /** updates  */
+  changelog: {
+    name: string;
+    date: string;
+    page_url?: string;
+  }[];
+
+  createdAt: string;
+  updatedAt: string;
+
+  /** extra metadata, will be shown in table to the user. Some keys like Tags are rendered custom */
+  metadata: AssetMetadata;
+}
 
 export interface SettingsType {
   assetsPath: string;

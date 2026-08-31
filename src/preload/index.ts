@@ -3,7 +3,7 @@ import { electronAPI } from "@electron-toolkit/preload";
 import { Asset, AssetPreview, AssetsManifestType, AssetSource, SettingsType } from "@shared/types";
 
 const api = {
-  searchAssets(query: string, source: AssetSource): Promise<Asset[]> {
+  searchAssets(query: string, source: AssetSource): Promise<AssetPreview[]> {
     return ipcRenderer.invoke("search", query, source);
   },
   fetchAssetDetail(id: string): Promise<Asset> {

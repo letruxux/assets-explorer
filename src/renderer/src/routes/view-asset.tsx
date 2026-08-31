@@ -11,6 +11,27 @@ import "swiper/css/pagination";
 import { ExternalLink } from "lucide-react";
 import { useInstalledAssetIds } from "@renderer/hooks/use-installed-asset-ids";
 
+function MetadataValue({ name, value }: { name: string; value: unknown }): React.JSX.Element {
+  switch (name) {
+    case "tags":
+      return (
+        <div className="flex gap-x-1 overflow-x-auto">
+          {(value as string[]).map((tag) => (
+            <span key={tag} className="badge badge-primary truncate">
+              {tag.toTitleCase()}
+            </span>
+          ))}
+        </div>
+      );
+
+    case "files":
+      return <>{Number(value).toLocaleString()}</>;
+
+    default:
+      return <>{String(value)}</>;
+  }
+}
+
 function ViewAsset(): React.JSX.Element {
   const { id } = useParams();
   const { installedAssetIds, refetch } = useInstalledAssetIds();
@@ -60,12 +81,12 @@ function ViewAsset(): React.JSX.Element {
   }, [id]);
 
   const downloadFileCallback = useCallback(
-    async (file: Asset["downloads"][number]) => {
+    async (file: Asset["files"][number]) => {
       if (!asset) return;
       setDownloading(true);
       setDownloadError(null);
       try {
-        await window.api.downloadFile(file.url, file.name, asset.id);
+        await window.api.downloadFile(file.direct_url, file.name, asset.id);
       } catch (err) {
         setDownloadError(err instanceof Error ? err : new Error(String(err)));
       } finally {
@@ -107,8 +128,7 @@ function ViewAsset(): React.JSX.Element {
         </span>
       </h1>
       <h3 className="mb-4">
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        by {(asset as any).meta?.Author || asset._asset_source} • from {asset._asset_source}
+        by {asset.author} • from {asset._asset_source}
       </h3>
 
       <Swiper
@@ -136,32 +156,14 @@ function ViewAsset(): React.JSX.Element {
         <table className="table">
           <tbody>
             {/* row 1 */}
-            {Object.entries(asset.meta)
+            {Object.entries(asset.metadata)
               .filter((e) => e[1])
               .map(([key, value]) => (
+                /* <MetadataValue key={key} name={key} value={value} /> */
                 <tr key={key}>
-                  <th>{key}</th>
+                  <th>{key.toTitleCase()}</th>
                   <td>
-                    {(() => {
-                      switch (key) {
-                        case "Tags":
-                          return (
-                            <div className="gap-x-1 flex overflow-x-auto">
-                              {(value as string[]).map((e) => (
-                                <span key={e} className="badge badge-primary truncate">
-                                  {e.toTitleCase()}
-                                </span>
-                              ))}
-                            </div>
-                          );
-
-                        case "Files":
-                          return <span>{value.toLocaleString()}</span>;
-
-                        default:
-                          return <span>{value}</span>;
-                      }
-                    })()}
+                    <MetadataValue key={key} name={key} value={value} />
                   </td>
                 </tr>
               ))}
@@ -169,22 +171,25 @@ function ViewAsset(): React.JSX.Element {
         </table>
       </div>
 
-      {asset.downloads.length > 0 && (
+      {asset.files.length > 0 && (
         <>
-          <h2 className="pt-4 pb-2 text-2xl font-bold">Downloads</h2>
+          <h2 className="pt-4 pb-2 text-2xl font-bold">Files</h2>
 
           <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
             <table className="table">
               <tbody>
                 {/* row 1 */}
-                {asset.downloads.map((dl) => (
+                {asset.files.map((dl) => (
                   <tr key={dl.name}>
                     <td className="font-mono flex gap-x-1 items-center h-16">
                       <span className="px-1 py-0.5 bg-base-200">{dl.name}</span>
-                      <span className="text-xs text-gray-400">({dl.file_size})</span>
+                      {dl.file_size && (
+                        <span className="text-xs text-gray-400">({dl.file_size})</span>
+                      )}
                     </td>
-                    <td>{new Date(dl.date).toLocaleDateString()}</td>
+                    <td>{dl.date ? new Date(dl.date).toLocaleDateString() : "N/A"}</td>
                     <td>
+                      {downloadError && <span className="text-error">{downloadError.message}</span>}
                       <button
                         className="btn btn-primary"
                         disabled={downloading || downloaded}

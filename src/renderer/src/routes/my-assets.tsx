@@ -1,5 +1,6 @@
 import { AssetCard } from "@renderer/components/asset-card";
 import { AssetsManifestType } from "@shared/types";
+import { assetToAssetPreview } from "@shared/utils";
 import { useState, useEffect } from "react";
 
 function About(): React.JSX.Element {
@@ -34,7 +35,10 @@ function About(): React.JSX.Element {
       {assetsManifest && (
         <section className="grid grid-cols-[repeat(auto-fit,minmax(16rem,1fr))] gap-4 mt-4">
           {assetsManifest.installedAssets.map((result) => (
-            <AssetCard key={result.cachedAsset.id} result={result.cachedAsset} />
+            <AssetCard
+              key={result.cachedAsset.id}
+              result={assetToAssetPreview(result.cachedAsset)}
+            />
           ))}
         </section>
       )}

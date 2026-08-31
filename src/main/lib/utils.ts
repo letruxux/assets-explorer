@@ -1,4 +1,4 @@
-import { parseId } from "@shared/types";
+import { Asset, AssetPreview, parseId } from "@shared/types";
 import { extname } from "path";
 
 export function makeMs({
