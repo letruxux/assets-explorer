@@ -2,6 +2,9 @@ import { buildId } from "@shared/types";
 import * as cheerio from "cheerio";
 import { USER_AGENT } from "./utils";
 import { ItchIoAssetPreview, ItchIoAsset } from "./server-types";
+import * as fs from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
 
 function buildItchIoSearchUrl(query: string): string {
   const facets = ["c.2", "m.free"];
@@ -23,15 +26,32 @@ function weirdDateParser(date: string): string {
   return new Date(date.replace(" @ ", " ")).toISOString();
 }
 
+async function buildResponseNotOkError(r: Response): Promise<Error> {
+  const text = await r.text();
+  const randomlyGeneratedFilename = `${Math.floor(Math.random() * 1000_000_000_000)}.html`;
+  const path = join(tmpdir(), randomlyGeneratedFilename);
+
+  fs.writeFileSync(path, text);
+
+  return new Error(
+    `
+Request failed ${r.status}
+  URL: ${r.url}
+  Status: ${r.statusText}
+  Text: ${path}
+`.trim()
+  );
+}
+
 export async function searchOnItchIo(query: string): Promise<ItchIoAssetPreview[]> {
   const url = buildItchIoSearchUrl(query);
   const response = await fetch(url);
-  if (!response.ok) throw new Error("Failed to fetch assets");
+  if (!response.ok) throw await buildResponseNotOkError(response);
   const html = await response.text();
   const $ = cheerio.load(html);
   const results = $(".results_column div.game_cell");
   return results
-    .map((i, el) => {
+    .map((_, el) => {
       const $el = $(el);
       const url = $el.find("a.title.game_link").attr("href");
       if (!url) throw new Error("Failed to parse url");
@@ -72,7 +92,7 @@ export async function fetchDownloadUrls(
     },
     body: formData
   });
-  if (!response.ok) throw new Error("Failed to fetch url");
+  if (!response.ok) throw await buildResponseNotOkError(response);
   const downloadPageUrl = (await response.json()) as { url?: string; errors?: string[] };
   if ((downloadPageUrl.errors ?? []).length > 0 || !downloadPageUrl.url) {
     console.error(downloadPageUrl.errors?.join(", "));
@@ -84,7 +104,7 @@ export async function fetchDownloadUrls(
       "User-Agent": USER_AGENT
     }
   });
-  if (!downloadPageResp.ok) throw new Error("Failed to fetch url");
+  if (!downloadPageResp.ok) throw await buildResponseNotOkError(downloadPageResp);
   console.log("Download page loaded");
   const $$ = cheerio.load(await downloadPageResp.text())(".upload");
   console.log("Found", $$.length, "downloads");
@@ -107,7 +127,7 @@ export async function fetchDownloadUrls(
         },
         body: formData
       });
-      if (!dlResp.ok) throw new Error("Failed to fetch url");
+      if (!dlResp.ok) throw await buildResponseNotOkError(dlResp);
       const finalUrl = ((await dlResp.json()) as { url: string }).url;
       return {
         file_size,

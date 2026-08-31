@@ -94,7 +94,7 @@ function ViewAsset(): React.JSX.Element {
       }
       await refetch();
     },
-    [asset]
+    [asset, refetch]
   );
 
   if (loading) {
@@ -122,13 +122,14 @@ function ViewAsset(): React.JSX.Element {
             target="_blank"
             className="flex items-center gap-x-2 hover:underline"
           >
-            {asset.title} <ExternalLink className="inline" />{" "}
+            {asset.title} <ExternalLink className="inline" />
           </a>
           <small className="text-gray-500 text-xs">#{asset.id}</small>
         </span>
       </h1>
       <h3 className="mb-4">
-        by {asset.author} • from {asset._asset_source}
+        by <code>{asset.author}</code>
+        <span className="text-gray-400 px-2">•</span>from <code>{asset._asset_source}</code>
       </h3>
 
       <Swiper
@@ -155,11 +156,9 @@ function ViewAsset(): React.JSX.Element {
       <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 mt-4 w-full">
         <table className="table">
           <tbody>
-            {/* row 1 */}
             {Object.entries(asset.metadata)
               .filter((e) => e[1])
               .map(([key, value]) => (
-                /* <MetadataValue key={key} name={key} value={value} /> */
                 <tr key={key}>
                   <th>{key.toTitleCase()}</th>
                   <td>
@@ -178,7 +177,6 @@ function ViewAsset(): React.JSX.Element {
           <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
             <table className="table">
               <tbody>
-                {/* row 1 */}
                 {asset.files.map((dl) => (
                   <tr key={dl.name}>
                     <td className="font-mono flex gap-x-1 items-center h-16">
