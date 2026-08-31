@@ -3,8 +3,8 @@ import { electronAPI } from "@electron-toolkit/preload";
 import { Asset, AssetPreview, AssetsManifestType, AssetSource, SettingsType } from "@shared/types";
 
 const api = {
-  searchAssets(query: string, sources: AssetSource): Promise<Asset[]> {
-    return ipcRenderer.invoke("search", query, sources);
+  searchAssets(query: string, source: AssetSource): Promise<Asset[]> {
+    return ipcRenderer.invoke("search", query, source);
   },
   fetchAssetDetail(id: string): Promise<Asset> {
     return ipcRenderer.invoke("asset-detail", id);
@@ -27,10 +27,10 @@ const api = {
   readAssetsManifest(): Promise<AssetsManifestType | null> {
     return ipcRenderer.invoke("assetsmanifest-read");
   },
-  openAssetFolder(assetId: string) {
+  openAssetFolder(assetId: string): Promise<void> {
     return ipcRenderer.invoke("open-asset-folder", assetId);
   },
-  deleteAsset(assetId: string) {
+  deleteAsset(assetId: string): Promise<void> {
     return ipcRenderer.invoke("delete-asset", assetId);
   }
 };
