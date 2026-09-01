@@ -54,9 +54,12 @@ class ItchIoWebsite extends BaseWebsite {
     } satisfies AssetPreview;
   }
 
-  async search(query: string): Promise<AssetPreview[]> {
+  async search(
+    query: string,
+    { avoidCache = true }: { avoidCache: boolean }
+  ): Promise<AssetPreview[]> {
     let all: Asset[];
-    if (this.kenneyAllAssetsCache.has("all")) {
+    if (this.kenneyAllAssetsCache.has("all") && !avoidCache) {
       all = this.kenneyAllAssetsCache.get("all")!;
     } else {
       all = (await kenneyApi.fetchAllKenneyAssets()).map(this._normalizeAsset);
@@ -84,8 +87,11 @@ class ItchIoWebsite extends BaseWebsite {
       });
   }
 
-  async fetchAsset(id: string): Promise<Asset> {
+  async fetchAsset(id: string, { avoidCache = true }: { avoidCache: boolean }): Promise<Asset> {
     const url = parseId(id).slug;
+
+    if (avoidCache) return await kenneyApi.fetchKenneyAsset(url).then(this._normalizeAsset);
+
     if (this.kenneyAssetsCache.has(url)) return this.kenneyAssetsCache.get(url)!;
     const asset = await kenneyApi.fetchKenneyAsset(url).then(this._normalizeAsset);
     this.kenneyAssetsCache.set(url, asset);

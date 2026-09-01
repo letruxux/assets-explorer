@@ -47,7 +47,13 @@ class ItchIoWebsite extends BaseWebsite {
     } satisfies AssetPreview;
   }
 
-  async search(query: string): Promise<AssetPreview[]> {
+  async search(
+    query: string,
+    { avoidCache = true }: { avoidCache: boolean }
+  ): Promise<AssetPreview[]> {
+    if (avoidCache)
+      return await itchIoApi.searchOnItchIo(query).then((e) => e.map(this._normalizeAssetPreview));
+
     if (this.itchIoSearchCache.has(query)) return this.itchIoSearchCache.get(query)!;
     const results = await itchIoApi
       .searchOnItchIo(query)
@@ -56,8 +62,10 @@ class ItchIoWebsite extends BaseWebsite {
     return results;
   }
 
-  async fetchAsset(id: string): Promise<Asset> {
+  async fetchAsset(id: string, { avoidCache = true }: { avoidCache: boolean }): Promise<Asset> {
     const url = parseId(id).pageUrl;
+    if (avoidCache) return await itchIoApi.fetchItchIoAsset(url).then(this._normalizeAsset);
+
     if (this.itchIoAssetCache.has(url)) return this.itchIoAssetCache.get(url)!;
     const asset = await itchIoApi.fetchItchIoAsset(url).then(this._normalizeAsset);
     this.itchIoAssetCache.set(url, asset);
