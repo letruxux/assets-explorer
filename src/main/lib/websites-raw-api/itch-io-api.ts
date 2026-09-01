@@ -1,11 +1,11 @@
 import { buildId, parseId } from "@shared/types";
 import * as cheerio from "cheerio";
-import { USER_AGENT } from "../utils";
-import { ItchIoAssetPreview, ItchIoAsset } from "../server-types";
+import { USER_AGENT } from "@lib/utils";
+import { ItchIoAssetPreview, ItchIoAsset } from "@lib/server-types";
 import * as fs from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import { fetchWithElectronBrowser } from "../cf-solve";
+import { fetchWithElectronBrowser } from "@lib/cf-solve";
 
 function buildItchIoSearchUrl(query: string): string {
   const facets = [

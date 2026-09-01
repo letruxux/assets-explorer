@@ -1,10 +1,10 @@
 import { AssetPreview, Asset, parseId } from "@shared/types";
 import { BaseWebsite } from "./base-website";
 import { TTLCache } from "@isaacs/ttlcache";
-import { makeMs } from "../utils";
-import * as kenneyApi from "../websites-raw-api/kenney-api";
+import { makeMs } from "@lib/utils";
+import * as kenneyApi from "@lib/websites-raw-api/kenney-api";
 import Fuse from "fuse.js";
-import { KenneyAsset } from "../server-types";
+import { KenneyAsset } from "@lib/server-types";
 
 const ONE_DAY = makeMs({ days: 1 });
 

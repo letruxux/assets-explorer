@@ -1,9 +1,9 @@
 import { AssetPreview, Asset, parseId } from "@shared/types";
 import { BaseWebsite } from "./base-website";
 import { TTLCache } from "@isaacs/ttlcache";
-import { makeMs } from "../utils";
-import * as itchIoApi from "../websites-raw-api/itch-io-api";
-import { ItchIoAsset, ItchIoAssetPreview } from "../server-types";
+import { makeMs } from "@lib/utils";
+import * as itchIoApi from "@lib/websites-raw-api/itch-io-api";
+import { ItchIoAsset, ItchIoAssetPreview } from "@lib/server-types";
 
 const ONE_DAY = makeMs({ days: 1 });
 
