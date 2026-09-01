@@ -23,15 +23,15 @@ export type ApiType = {
 
 export const API_CHANNELS = [
   "searchAssets",
-  "changeAssetsPath",
-  "deleteFile",
-  "downloadFile",
+  "fetchAssetDetail",
   "getInstalledFiles",
-  "openFileFolder",
-  "readAssetsManifest",
+  "downloadFile",
   "readSettings",
-  "testItchIo",
-  "fetchAssetDetail"
+  "changeAssetsPath",
+  "readAssetsManifest",
+  "openFileFolder",
+  "deleteFile",
+  "testItchIo"
 ] as const satisfies Array<keyof ApiType>;
 
 type AssertAllApiChannelsIncluded =
