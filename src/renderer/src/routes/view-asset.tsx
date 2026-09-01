@@ -26,7 +26,7 @@ function MetadataValue({ name, value }: { name: string; value: unknown }): React
       );
 
     case "rating": {
-      const [rating, count] = value.split("|");
+      const [rating, count] = (value as string).split("|").map(Number);
       return (
         <span className="flex items-center gap-x-2">
           <div className="rating rating-half">
