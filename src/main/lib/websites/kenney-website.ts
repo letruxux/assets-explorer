@@ -56,7 +56,7 @@ class ItchIoWebsite extends BaseWebsite {
 
   async search(
     query: string,
-    { avoidCache = false }: { avoidCache: boolean }
+    { avoidCache = false }: { avoidCache?: boolean } = {}
   ): Promise<AssetPreview[]> {
     let all: Asset[];
     if (this.kenneyAllAssetsCache.has("all") && !avoidCache) {
@@ -87,7 +87,10 @@ class ItchIoWebsite extends BaseWebsite {
       });
   }
 
-  async fetchAsset(id: string, { avoidCache = false }: { avoidCache: boolean }): Promise<Asset> {
+  async fetchAsset(
+    id: string,
+    { avoidCache = false }: { avoidCache?: boolean } = {}
+  ): Promise<Asset> {
     const url = parseId(id).slug;
 
     if (avoidCache) return await kenneyApi.fetchKenneyAsset(url).then(this._normalizeAsset);

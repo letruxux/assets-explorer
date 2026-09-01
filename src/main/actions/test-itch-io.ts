@@ -1,7 +1,7 @@
 import { itchIoWebsite } from "@main/lib/websites/itchio-website";
 
 export default async function testItchIo(): Promise<string> {
-  const result = await itchIoWebsite.search("asset");
+  const result = await itchIoWebsite.search("asset", { avoidCache: true });
   if (result.length === 0) {
     throw new Error("No assets found");
   }
