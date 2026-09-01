@@ -1,5 +1,5 @@
 import { AssetPreview, Asset, parseId } from "@shared/types";
-import { BaseWebsite } from "./base-website";
+import { BaseWebsite, WebsiteCallConfig } from "./base-website";
 import { TTLCache } from "@isaacs/ttlcache";
 import { makeMs } from "@lib/utils";
 import * as kenneyApi from "@lib/websites-raw-api/kenney-api";
@@ -56,7 +56,7 @@ class ItchIoWebsite extends BaseWebsite {
 
   async search(
     query: string,
-    { avoidCache = false }: { avoidCache?: boolean } = {}
+    { avoidCache = false }: WebsiteCallConfig = {}
   ): Promise<AssetPreview[]> {
     let all: Asset[];
     if (this.kenneyAllAssetsCache.has("all") && !avoidCache) {
@@ -87,10 +87,7 @@ class ItchIoWebsite extends BaseWebsite {
       });
   }
 
-  async fetchAsset(
-    id: string,
-    { avoidCache = false }: { avoidCache?: boolean } = {}
-  ): Promise<Asset> {
+  async fetchAsset(id: string, { avoidCache = false }: WebsiteCallConfig = {}): Promise<Asset> {
     const url = parseId(id).slug;
 
     if (avoidCache) return await kenneyApi.fetchKenneyAsset(url).then(this._normalizeAsset);

@@ -1,5 +1,5 @@
 import { AssetPreview, Asset, parseId } from "@shared/types";
-import { BaseWebsite } from "./base-website";
+import { BaseWebsite, WebsiteCallConfig } from "./base-website";
 import { TTLCache } from "@isaacs/ttlcache";
 import { makeMs } from "@lib/utils";
 import * as itchIoApi from "@lib/websites-raw-api/itch-io-api";
@@ -49,7 +49,7 @@ class ItchIoWebsite extends BaseWebsite {
 
   async search(
     query: string,
-    { avoidCache = false }: { avoidCache?: boolean } = {}
+    { avoidCache = false }: WebsiteCallConfig = {}
   ): Promise<AssetPreview[]> {
     if (avoidCache)
       return await itchIoApi.searchOnItchIo(query).then((e) => e.map(this._normalizeAssetPreview));
@@ -62,10 +62,7 @@ class ItchIoWebsite extends BaseWebsite {
     return results;
   }
 
-  async fetchAsset(
-    id: string,
-    { avoidCache = false }: { avoidCache?: boolean } = {}
-  ): Promise<Asset> {
+  async fetchAsset(id: string, { avoidCache = false }: WebsiteCallConfig = {}): Promise<Asset> {
     const url = parseId(id).pageUrl;
     if (avoidCache) return await itchIoApi.fetchItchIoAsset(url).then(this._normalizeAsset);
 
