@@ -12,7 +12,6 @@ class ItchIoWebsite extends BaseWebsite {
     max: 1,
     ttl: ONE_DAY
   });
-  kenneyAssetsCache = new TTLCache<string, Asset>({ max: 50, ttl: ONE_DAY });
 
   private _normalizeAsset(asset: kenneyApi.KenneyAsset): Asset {
     return {
@@ -58,6 +57,15 @@ class ItchIoWebsite extends BaseWebsite {
     } satisfies AssetPreview;
   }
 
+  private async getAllKenneyAssets(): Promise<Asset[]> {
+    if (this.kenneyAllAssetsCache.has("all")) return this.kenneyAllAssetsCache.get("all")!;
+    const assets = await kenneyApi
+      .fetchAllKenneyAssets()
+      .then((assets) => assets.map(this._normalizeAsset));
+    this.kenneyAllAssetsCache.set("all", assets);
+    return assets;
+  }
+
   async search(
     query: string,
     { avoidCache = false }: WebsiteCallConfig = {}
@@ -92,14 +100,12 @@ class ItchIoWebsite extends BaseWebsite {
   }
 
   async fetchAsset(id: string, { avoidCache = false }: WebsiteCallConfig = {}): Promise<Asset> {
-    const url = parseId(id).slug;
+    const slug = parseId(id).slug;
 
-    if (avoidCache) return await kenneyApi.fetchKenneyAsset(url).then(this._normalizeAsset);
+    if (avoidCache) return await kenneyApi.fetchKenneyAsset(slug).then(this._normalizeAsset);
 
-    if (this.kenneyAssetsCache.has(url)) return this.kenneyAssetsCache.get(url)!;
-    const asset = await kenneyApi.fetchKenneyAsset(url).then(this._normalizeAsset);
-    this.kenneyAssetsCache.set(url, asset);
-    return asset;
+    const assets = await this.getAllKenneyAssets();
+    return assets.find((asset) => parseId(asset.id).slug === slug)!;
   }
 }
 
