@@ -1,48 +1,39 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { electronAPI } from "@electron-toolkit/preload";
-import {
-  Asset,
-  AssetPreview,
-  AssetsManifestType,
-  AssetSource,
-  InstalledFile,
-  SettingsType
-} from "@shared/types";
+import type { ApiType } from "@shared/api";
 
-const api = {
-  searchAssets(query: string, source: AssetSource): Promise<AssetPreview[]> {
+const api: ApiType = {
+  searchAssets(query, source) {
     return ipcRenderer.invoke("search", query, source);
   },
-  fetchAssetDetail(id: string): Promise<Asset> {
+  fetchAssetDetail(id) {
     return ipcRenderer.invoke("asset-detail", id);
   },
-  getInstalledFiles(): Promise<AssetsManifestType["installedFiles"]> {
+  getInstalledFiles() {
     return ipcRenderer.invoke("get-installed-files");
   },
-  downloadFile(asset: Asset, file: Asset["files"][number]) {
+  downloadFile(asset, file) {
     return ipcRenderer.invoke("download-file", asset, file);
   },
-  readSettings(): Promise<SettingsType> {
+  readSettings() {
     return ipcRenderer.invoke("settings-read");
   },
   changeAssetsPath() {
     return ipcRenderer.invoke("change-assets-path");
   },
-  readAssetsManifest(): Promise<AssetsManifestType | null> {
+  readAssetsManifest() {
     return ipcRenderer.invoke("assetsmanifest-read");
   },
-  openFileFolder(file: InstalledFile): Promise<void> {
+  openFileFolder(file) {
     return ipcRenderer.invoke("open-file-folder", file);
   },
-  deleteFile(installedFile: InstalledFile): Promise<void> {
+  deleteFile(installedFile) {
     return ipcRenderer.invoke("delete-file", installedFile);
   },
-  testItchIo(): Promise<string> {
+  testItchIo() {
     return ipcRenderer.invoke("test-itch-io");
   }
 };
-
-export type ApiType = typeof api;
 
 if (process.contextIsolated) {
   try {

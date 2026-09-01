@@ -1,52 +1,67 @@
 import { ipcMain } from "electron";
 import { settings } from "@modules/settings";
 import { getAssetsManifest } from "@modules/assets-manifest";
-import { Asset, AssetPreview, AssetSource, InstalledFile } from "@shared/types";
 import { getAsset, search } from "@lib/search";
 import { actions } from "./actions";
+import type { ApiType } from "@shared/api";
+
+const api: ApiType = {
+  changeAssetsPath() {
+    return actions.changeAssetsPath();
+  },
+
+  deleteFile(installedFile) {
+    return actions.deleteAsset(installedFile);
+  },
+
+  downloadFile(asset, file) {
+    return actions.downloadFile(asset, file);
+  },
+
+  async getInstalledFiles() {
+    return actions.getInstalledFiles();
+  },
+
+  async openFileFolder(file) {
+    return actions.openFileFolder(file);
+  },
+
+  async readAssetsManifest() {
+    return getAssetsManifest()?.data ?? null;
+  },
+
+  async readSettings() {
+    return settings.get();
+  },
+
+  searchAssets(query, source) {
+    return search(query, source);
+  },
+
+  testItchIo() {
+    return actions.testItchIo();
+  },
+
+  fetchAssetDetail(id) {
+    return getAsset(id);
+  }
+} satisfies ApiType;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function registerApi<T extends Record<string, (...args: any[]) => any>>(api: T): void {
+  for (const key of Object.keys(api) as Array<keyof T>) {
+    const handler = api[key];
+
+    ipcMain.handle(key as string, (_event, ...args) => {
+      return handler(...args);
+    });
+  }
+}
 
 export default function setupRoutes(): void {
-  ipcMain.on("ping", (event) => event.reply("pong"));
-  ipcMain.handle(
-    "search",
-    async (_event, query: string, source: AssetSource): Promise<AssetPreview[]> => {
-      return await search(query, source);
-    }
-  );
-
-  ipcMain.handle("open-file-folder", (_event, file: InstalledFile) => {
-    return actions.openFileFolder(file);
+  ipcMain.on("ping", (event) => {
+    event.reply("pong");
   });
 
-  ipcMain.handle("delete-file", async (_event, installedFile: InstalledFile) => {
-    return await actions.deleteAsset(installedFile);
-  });
-
-  ipcMain.handle("asset-detail", async (_event, id: string) => {
-    return await getAsset(id);
-  });
-
-  ipcMain.handle("download-file", async (_event, asset: Asset, file: Asset["files"][number]) => {
-    return await actions.downloadFile(asset, file);
-  });
-
-  ipcMain.handle("get-installed-files", () => {
-    return actions.getInstalledFiles();
-  });
-
-  ipcMain.handle("settings-read", async () => {
-    return settings.get();
-  });
-
-  ipcMain.handle("assetsmanifest-read", async () => {
-    return getAssetsManifest()?.data;
-  });
-
-  ipcMain.handle("change-assets-path", async () => {
-    return await actions.changeAssetsPath();
-  });
-
-  ipcMain.handle("test-itch-io", async () => {
-    return await actions.testItchIo();
-  });
+  registerApi(api);
 }
