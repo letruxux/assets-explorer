@@ -2,7 +2,7 @@ import { AssetCard } from "@renderer/components/asset-card";
 import useResult from "@renderer/hooks/use-result";
 import { AssetsManifestType } from "@shared/types";
 import { assetToAssetPreview } from "@shared/utils";
-import { ExternalLink, FileTextIcon, FolderIcon } from "lucide-react";
+import { FileTextIcon, FolderIcon } from "lucide-react";
 import { useCallback } from "react";
 
 function About(): React.JSX.Element {

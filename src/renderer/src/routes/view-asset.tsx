@@ -160,7 +160,8 @@ function ViewAsset(): React.JSX.Element {
             target="_blank"
             className="flex items-center gap-x-2 hover:underline min-w-0"
           >
-            <span className="truncate">{asset.title}</span> <ExternalLink className="inline shrink-0" />
+            <span className="truncate">{asset.title}</span>{" "}
+            <ExternalLink className="inline shrink-0" />
           </a>
           <small className="text-gray-500 text-xs">#{asset.id}</small>
         </span>
@@ -244,7 +245,7 @@ function SingleAssetDownload({
   return (
     <tr key={dl.name}>
       <td className="font-mono flex gap-x-1 items-center h-16">
-        <span className="px-1 py-0.5 bg-base-200 truncate max-w-40">{dl.name}</span>
+        <span className="px-1 py-0.5 bg-base-200 truncate max-w-fit">{dl.name}</span>
         {dl.file_size && <span className="text-xs text-gray-400 shrink-0">({dl.file_size})</span>}
       </td>
       <td>
