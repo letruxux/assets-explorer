@@ -1,39 +1,13 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { electronAPI } from "@electron-toolkit/preload";
-import type { ApiType } from "@shared/api";
+import { type ApiType, API_CHANNELS } from "@shared/api";
 
-const api: ApiType = {
-  searchAssets(query, source) {
-    return ipcRenderer.invoke("searchAssets", query, source);
-  },
-  fetchAssetDetail(id) {
-    return ipcRenderer.invoke("fetchAssetDetail", id);
-  },
-  getInstalledFiles() {
-    return ipcRenderer.invoke("getInstalledFiles");
-  },
-  downloadFile(asset, file) {
-    return ipcRenderer.invoke("downloadFile", asset, file);
-  },
-  readSettings() {
-    return ipcRenderer.invoke("readSettings");
-  },
-  changeAssetsPath() {
-    return ipcRenderer.invoke("changeAssetsPath");
-  },
-  readAssetsManifest() {
-    return ipcRenderer.invoke("readAssetsManifest");
-  },
-  openFileFolder(file) {
-    return ipcRenderer.invoke("openFileFolder", file);
-  },
-  deleteFile(installedFile) {
-    return ipcRenderer.invoke("deleteFile", installedFile);
-  },
-  testItchIo() {
-    return ipcRenderer.invoke("testItchIo");
-  }
-};
+const api: ApiType = Object.fromEntries(
+  API_CHANNELS.map((channel) => [
+    channel,
+    (...args: unknown[]) => ipcRenderer.invoke(channel, ...args)
+  ])
+) as ApiType;
 
 if (process.contextIsolated) {
   try {

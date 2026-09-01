@@ -20,3 +20,23 @@ export type ApiType = {
   deleteFile(installedFile: InstalledFile): Promise<void>;
   testItchIo(): Promise<string>;
 };
+
+export const API_CHANNELS = [
+  "searchAssets",
+  "changeAssetsPath",
+  "deleteFile",
+  "downloadFile",
+  "getInstalledFiles",
+  "openFileFolder",
+  "readAssetsManifest",
+  "readSettings",
+  "testItchIo",
+  "fetchAssetDetail"
+] as const satisfies Array<keyof ApiType>;
+
+type AssertAllApiChannelsIncluded =
+  Exclude<keyof ApiType, (typeof API_CHANNELS)[number]> extends never ? true : never;
+
+/* this is intentionally not used because it errors on typechecking */
+const apiChannelsNotUpdated: AssertAllApiChannelsIncluded = true;
+console.debug(apiChannelsNotUpdated);

@@ -47,6 +47,8 @@ const api: ApiType = {
   }
 } satisfies ApiType;
 
+export const API_CHANNELS = Object.keys(api) as Array<keyof typeof api>;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function registerApi<T extends Record<string, (...args: any[]) => any>>(api: T): void {
   for (const key of Object.keys(api) as Array<keyof T>) {
