@@ -5,7 +5,14 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   main: {
-    resolve: { alias: { "@shared": resolve("src/shared") } }
+    resolve: {
+      alias: {
+        "@shared": resolve("src/shared"),
+        "@main": resolve("src/main"),
+        "@lib": resolve("src/main/lib"),
+        "@modules": resolve("src/main/lib/modules")
+      }
+    }
   },
   preload: {
     resolve: { alias: { "@shared": resolve("src/shared") } }
