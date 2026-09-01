@@ -1,11 +1,51 @@
 import { buildId, parseId } from "@shared/types";
 import * as cheerio from "cheerio";
 import { USER_AGENT } from "@lib/utils";
-import { ItchIoAssetPreview, ItchIoAsset } from "@lib/server-types";
 import * as fs from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { fetchWithElectronBrowser } from "@lib/cf-solve";
+
+export type ItchIoAssetPreview = {
+  title: string;
+  author: string;
+  url: string;
+  images: string[];
+  id: string;
+  slug: string; /* same as id */
+  price: string | null;
+  _asset_source: "itch.io";
+};
+
+export type ItchIoAsset = {
+  title: string;
+  author: string;
+  url: string;
+  images: string[];
+  id: string;
+  slug: string; /* same as id */
+  _asset_source: "itch.io";
+
+  downloads: {
+    date: string;
+    name: string;
+    url: string;
+    file_size: string;
+  }[];
+
+  meta: {
+    RatingValue: number;
+    RatingCount: number;
+    Tags: string[];
+    Description?: string;
+    License: string;
+  };
+  updates: Array<{ name: string; url: string; date: string }>;
+  _extracted: {
+    createdAt: string;
+    updatedAt: string;
+  };
+};
 
 function buildItchIoSearchUrl(query: string): string {
   const facets = [
@@ -150,7 +190,7 @@ export async function fetchItchIoAsset(url: string): Promise<ItchIoAsset> {
   const vgPage = $(".view_game_page");
   const images = vgPage
     .find(".screenshot_list img")
-    .map((i, el) => {
+    .map((_, el) => {
       return $(el).attr("src")!;
     })
     .get();
@@ -161,7 +201,7 @@ export async function fetchItchIoAsset(url: string): Promise<ItchIoAsset> {
     return Number(
       JSON.parse(
         $("script[type='application/ld+json']")
-          .filter((i, el) => {
+          .filter((_, el) => {
             const $el = $(el);
             return $el.text().includes('ratingValue":');
           })
@@ -191,7 +231,7 @@ export async function fetchItchIoAsset(url: string): Promise<ItchIoAsset> {
       case "Tags":
         meta.Tags = $(valCell)
           .find("a")
-          .map((i, el) => $(el).text())
+          .map((_, el) => $(el).text())
           .get();
         break;
       case "Asset license":
@@ -207,7 +247,7 @@ export async function fetchItchIoAsset(url: string): Promise<ItchIoAsset> {
   }
 
   const updates = $("#devlog ul li")
-    .map((i, el) => {
+    .map((_, el) => {
       const $el = $(el);
       const date = weirdDateParser($el.find(".post_date abbr").attr("title")!);
       const name = $el.find("a").text();

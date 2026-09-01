@@ -1,5 +1,33 @@
 import { buildId } from "@shared/types";
-import { KenneyAsset } from "@lib/server-types";
+import { ItchIoAsset } from "./itch-io-api";
+
+export type KenneyAsset = {
+  title: string;
+  meta: {
+    Tags: Array<string>;
+    Category: string;
+    Series: string;
+    "Tile size"?: string;
+    Files: number;
+    License: string;
+    Features?: Array<string>;
+  };
+  updates: Array<{ name: string; description: string; date: string }>;
+  _extracted: { createdAt: string; updatedAt: string; version: string };
+  _raw_meta: {
+    Tags: string;
+    Category: string;
+    "Tile size"?: string;
+    Files: string;
+    License: string;
+    Features?: string;
+  };
+  slug: string;
+  images: Array<string>;
+  downloads: ItchIoAsset["downloads"];
+  _asset_source: "kenney.nl";
+  id: string;
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function transformKenneyAsset(asset: any): KenneyAsset {
