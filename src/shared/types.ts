@@ -26,8 +26,8 @@ export interface AssetMetadata {
   license?: string;
   features?: string[];
 
-  rating_value?: number;
-  rating_count?: number;
+  RatingValue?: number;
+  RatingCount?: number;
   description?: string;
 
   [key: string]: unknown;

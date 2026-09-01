@@ -9,6 +9,7 @@ import ViewAsset from "./routes/view-asset";
 import Settings from "./routes/settings";
 import ErrorFallback from "./components/error-page";
 import { ErrorBoundary } from "react-error-boundary";
+import { useInstalledFiles } from "./store/use-installed-files";
 
 declare global {
   interface String {
@@ -25,6 +26,8 @@ String.prototype.toTitleCase = function () {
 Object.equals = function (a: object, b: object): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 };
+
+useInstalledFiles.getState().init();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

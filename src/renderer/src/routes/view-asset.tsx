@@ -10,9 +10,10 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Check, Download, ExternalLink, Loader2 } from "lucide-react";
 import useResult from "@renderer/hooks/use-result";
+import { useInstalledFiles } from "@renderer/store/use-installed-files";
 
 function MetadataValue({ name, value }: { name: string; value: unknown }): React.JSX.Element {
-  switch (name) {
+  switch (name.toLowerCase()) {
     case "tags":
       return (
         <div className="flex gap-x-1 overflow-x-auto">
@@ -24,12 +25,60 @@ function MetadataValue({ name, value }: { name: string; value: unknown }): React
         </div>
       );
 
+    case "rating": {
+      const [rating, count] = value.split("|");
+      return (
+        <span className="flex items-center gap-x-2">
+          <div className="rating rating-half">
+            <div className="mask mask-star-2 mask-half-1 bg-orange-400" aria-checked={rating > 0} />
+            <div
+              className="mask mask-star-2 mask-half-2 bg-orange-400"
+              aria-checked={rating > 0.5}
+            />
+            <div className="mask mask-star-2 mask-half-1 bg-orange-400" aria-checked={rating > 1} />
+            <div
+              className="mask mask-star-2 mask-half-2 bg-orange-400"
+              aria-checked={rating > 1.5}
+            />
+            <div className="mask mask-star-2 mask-half-1 bg-orange-400" aria-checked={rating > 2} />
+            <div
+              className="mask mask-star-2 mask-half-2 bg-orange-400"
+              aria-checked={rating > 2.5}
+            />
+            <div className="mask mask-star-2 mask-half-1 bg-orange-400" aria-checked={rating > 3} />
+            <div
+              className="mask mask-star-2 mask-half-2 bg-orange-400"
+              aria-checked={rating > 3.5}
+            />
+            <div className="mask mask-star-2 mask-half-1 bg-orange-400" aria-checked={rating > 4} />
+            <div
+              className="mask mask-star-2 mask-half-2 bg-orange-400"
+              aria-checked={rating > 4.5}
+            />
+          </div>
+          <span className="text-xs text-gray-400">
+            ({count}, {rating}/5)
+          </span>
+        </span>
+      );
+    }
     case "files":
       return <>{Number(value).toLocaleString()}</>;
 
     default:
       return <>{String(value)}</>;
   }
+}
+
+function MetadataRow({ name, value }: { name: string; value: unknown }): React.JSX.Element {
+  return (
+    <tr key={name}>
+      <th>{name.toTitleCase()}</th>
+      <td>
+        <MetadataValue name={name} value={value} />
+      </td>
+    </tr>
+  );
 }
 
 function ViewAsset(): React.JSX.Element {
@@ -71,6 +120,20 @@ function ViewAsset(): React.JSX.Element {
     };
   }, [id]);
 
+  const metadata = useMemo(() => {
+    const original = asset?.metadata ?? {};
+
+    return Object.fromEntries(
+      Object.entries(original)
+        .filter(([k, v]) => v && !["Author", "RatingValue", "Status"].includes(k))
+        .map(([k, v]) =>
+          k === "RatingCount"
+            ? ["Rating", `${original.RatingValue}|${original.RatingCount}`]
+            : [k, v]
+        )
+    );
+  }, [asset]);
+
   if (loading) {
     return <div className="p-4">Loading...</div>;
   }
@@ -96,7 +159,7 @@ function ViewAsset(): React.JSX.Element {
             target="_blank"
             className="flex items-center gap-x-2 hover:underline"
           >
-            {asset.title} <ExternalLink className="inline" />
+            <span className="truncate">{asset.title}</span> <ExternalLink className="inline" />
           </a>
           <small className="text-gray-500 text-xs">#{asset.id}</small>
         </span>
@@ -130,15 +193,10 @@ function ViewAsset(): React.JSX.Element {
       <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 mt-4 w-full">
         <table className="table">
           <tbody>
-            {Object.entries(asset.metadata)
+            {Object.entries(metadata)
               .filter((e) => e[1])
               .map(([key, value]) => (
-                <tr key={key}>
-                  <th>{key.toTitleCase()}</th>
-                  <td>
-                    <MetadataValue key={key} name={key} value={value} />
-                  </td>
-                </tr>
+                <MetadataRow key={key} name={key} value={value} />
               ))}
           </tbody>
         </table>
@@ -156,10 +214,7 @@ function SingleAssetDownload({
   asset: Asset;
   dl: Asset["files"][number];
 }): React.JSX.Element {
-  const { data: installedFiles } = useResult(
-    useCallback(() => window.api.getInstalledFiles(), []),
-    {}
-  );
+  const { installedFiles } = useInstalledFiles();
 
   const downloaded = useMemo(
     () =>

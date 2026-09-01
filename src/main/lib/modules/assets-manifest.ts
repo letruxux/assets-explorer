@@ -20,10 +20,8 @@ class AssetsManifestFile {
   }
 
   public save(): void {
-    setTimeout(() => {
-      ipcMain.emit("installed-assets-updated");
-    }, 100);
     fs.writeFileSync(this.path, JSON.stringify(this.data, null, 2));
+    ipcMain.emit("installed-files-updated");
   }
 
   public removeInstalledFile(file: InstalledFile): void {

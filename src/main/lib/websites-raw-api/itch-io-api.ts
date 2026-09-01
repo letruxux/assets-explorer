@@ -178,16 +178,13 @@ export async function fetchItchIoAsset(url: string): Promise<ItchIoAsset> {
   const moreInfoTableRows = $(".info_panel_wrapper table tbody tr");
   const _raw_meta: Record<string, string> = {};
   async function getRatingValue(): Promise<number> {
-    return Number(
-      JSON.parse(
-        $("script[type='application/ld+json']")
-          .filter((_, el) => {
-            const $el = $(el);
-            return $el.text().includes('ratingValue":');
-          })
-          .text()
-      ).ratingValue
-    );
+    const ldJsons = $("script[type='application/ld+json']");
+    const ldJson = ldJsons.filter((_, el) => {
+      const $el = $(el);
+      return $el.text().includes('ratingValue":');
+    });
+    const parsed = JSON.parse(ldJson.text());
+    return Number(parsed.aggregateRating.ratingValue);
   }
   /// @ts-ignore mustard
   const meta: ItchIoAsset["meta"] = {

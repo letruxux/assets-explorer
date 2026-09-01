@@ -3,7 +3,7 @@ import { AssetPreview } from "@shared/types";
 import { useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Folder } from "lucide-react";
-import useResult from "@renderer/hooks/use-result";
+import { useInstalledFiles } from "@renderer/store/use-installed-files";
 
 export function AssetCard({
   result,
@@ -12,10 +12,7 @@ export function AssetCard({
   result: AssetPreview;
   query?: string;
 }): React.JSX.Element {
-  const { data: installedFiles } = useResult(
-    useCallback(() => window.api.getInstalledFiles(), []),
-    {}
-  );
+  const { installedFiles } = useInstalledFiles();
 
   const allInstalledFilesOfAsset = useMemo(
     () => (installedFiles ?? []).filter((file) => file.assetId === result.id),
