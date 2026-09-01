@@ -1,6 +1,6 @@
 import { ipcMain } from "electron";
-import { settings } from "./lib/settings";
-import { getAssetsManifest } from "./lib/assets-manifest";
+import { settings } from "./lib/modules/settings";
+import { getAssetsManifest } from "./lib/modules/assets-manifest";
 import { AssetPreview, AssetSource } from "@shared/types";
 import { getAsset, search } from "./lib/search";
 import { actions } from "./actions";

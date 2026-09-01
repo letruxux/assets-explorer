@@ -1,4 +1,4 @@
-import { getAssetsManifest } from "../lib/assets-manifest";
+import { getAssetsManifest } from "../lib/modules/assets-manifest";
 import * as fs from "fs";
 
 export default async function deleteAsset(assetId: string): Promise<void> {

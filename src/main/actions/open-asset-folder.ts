@@ -1,5 +1,5 @@
 import { shell } from "electron";
-import { getAssetsManifest } from "../lib/assets-manifest";
+import { getAssetsManifest } from "../lib/modules/assets-manifest";
 
 export default function openAssetFolder(assetId: string): void {
   const assetsManifest = getAssetsManifest();

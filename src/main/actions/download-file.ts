@@ -1,10 +1,10 @@
-import { getAssetsManifest } from "../lib/assets-manifest";
+import { getAssetsManifest } from "../lib/modules/assets-manifest";
 import { parseId } from "@shared/types";
 import JSZip from "jszip";
 import { createExtractorFromFile } from "node-unrar-js";
 import { join, sep, dirname, resolve } from "path";
 import { getAsset } from "../lib/search";
-import { settings } from "../lib/settings";
+import { settings } from "../lib/modules/settings";
 import { guessAssetFilename } from "../lib/utils";
 import * as fs from "fs";
 
