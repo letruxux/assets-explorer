@@ -1,5 +1,5 @@
 import { buildId } from "@shared/types";
-import { KenneyAsset } from "./server-types";
+import { KenneyAsset } from "../server-types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function transformKenneyAsset(asset: any): KenneyAsset {

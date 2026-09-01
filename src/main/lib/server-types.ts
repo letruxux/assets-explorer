@@ -33,6 +33,7 @@ export type ItchIoAssetPreview = {
   images: string[];
   id: string;
   slug: string; /* same as id */
+  price: string | null;
   _asset_source: "itch.io";
 };
 

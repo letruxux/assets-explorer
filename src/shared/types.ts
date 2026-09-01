@@ -14,6 +14,7 @@ export interface AssetPreview {
   /** generated with buildId() */
   id: string;
   tags: string[];
+  price?: string;
 }
 
 export interface AssetMetadata {

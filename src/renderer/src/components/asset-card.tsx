@@ -15,9 +15,7 @@ export function AssetCard({
   query?: string;
 }): React.JSX.Element {
   const { installedAssetIds } = useInstalledAssetIds();
-  const { addInstalledAssetId, removeInstalledAssetId } = useInstalledAssetsStore();
-  const [downloading, setDownloading] = useState(false);
-  const [downloadError, setDownloadError] = useState<Error | null>(null);
+  const { removeInstalledAssetId } = useInstalledAssetsStore();
 
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<Error | null>(null);
@@ -63,20 +61,6 @@ export function AssetCard({
     [installedAssetIds, result.id]
   );
 
-  const downloadCallback = useCallback(async () => {
-    setDownloading(true);
-    setDownloadError(null);
-
-    try {
-      await window.api.downloadAsset(result);
-      addInstalledAssetId(result.id);
-    } catch (error) {
-      setDownloadError(error instanceof Error ? error : new Error(String(error)));
-    } finally {
-      setDownloading(false);
-    }
-  }, [result, addInstalledAssetId]);
-
   return (
     <Link to={`/asset/${result.id}`}>
       <article
@@ -85,11 +69,20 @@ export function AssetCard({
         })}
       >
         <figure
-          className={cn("overflow-hidden", {
+          className={cn("overflow-hidden relative", {
             "aspect-video": result._asset_source === "kenney.nl",
             "aspect-4/3": result._asset_source === "itch.io"
           })}
         >
+          {result.price && (
+            <span
+              className={cn("badge absolute top-2 left-2", {
+                "badge-error": result.price !== undefined
+              })}
+            >
+              {result.price}
+            </span>
+          )}
           <img src={result.images[0]} alt={result.title} className="h-full w-full object-cover" />
         </figure>
         <div className="card-body">
@@ -115,47 +108,36 @@ export function AssetCard({
               ))}
             </div>
           )}
-          <div className="card-actions mt-2 flex justify-end">
-            {downloadError && <span className="text-error">{downloadError.message}</span>}
-            {deleteError && <span className="text-error">{deleteError.message}</span>}
-            {!isDownloaded && (
-              <button
-                className="btn btn-square"
-                disabled={isDownloaded || downloading}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  downloadCallback();
-                }}
-              >
-                {downloading ? <Spinner /> : "DL"}
-              </button>
-            )}
-            {isDownloaded && (
-              <button
-                className="btn btn-square btn-error btn-ghost"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  deleteCallback();
-                }}
-              >
-                {deleting ? <Spinner /> : <Trash2 />}
-              </button>
-            )}
-            {isDownloaded && (
-              <button
-                className="btn btn-square"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  openAssetFolderCallback();
-                }}
-              >
-                <Folder />
-              </button>
-            )}
-          </div>
+          {!!(deleteError || isDownloaded) && (
+            <div className="card-actions mt-2 flex justify-end">
+              {deleteError && <span className="text-error">{deleteError.message}</span>}
+
+              {isDownloaded && (
+                <button
+                  className="btn btn-square btn-error btn-ghost"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    deleteCallback();
+                  }}
+                >
+                  {deleting ? <Spinner /> : <Trash2 />}
+                </button>
+              )}
+              {isDownloaded && (
+                <button
+                  className="btn btn-square"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openAssetFolderCallback();
+                  }}
+                >
+                  <Folder />
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </article>
     </Link>

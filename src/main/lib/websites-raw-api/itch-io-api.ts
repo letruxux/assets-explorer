@@ -1,13 +1,16 @@
-import { buildId } from "@shared/types";
+import { buildId, parseId } from "@shared/types";
 import * as cheerio from "cheerio";
-import { USER_AGENT } from "./utils";
-import { ItchIoAssetPreview, ItchIoAsset } from "./server-types";
+import { USER_AGENT } from "../utils";
+import { ItchIoAssetPreview, ItchIoAsset } from "../server-types";
 import * as fs from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
+import { fetchWithElectronBrowser } from "../cf-solve";
 
 function buildItchIoSearchUrl(query: string): string {
-  const facets = ["c.2", "m.free"];
+  const facets = [
+    "c.2"
+  ]; /* "m.free" is not available because we need to login... but login is coming soon anyway */
   const url = new URL(`https://itch.io/search`);
   url.searchParams.set("facets", facets.join(","));
   url.searchParams.set("type", "games");
@@ -45,9 +48,7 @@ Request failed ${r.status}
 
 export async function searchOnItchIo(query: string): Promise<ItchIoAssetPreview[]> {
   const url = buildItchIoSearchUrl(query);
-  const response = await fetch(url);
-  if (!response.ok) throw await buildResponseNotOkError(response);
-  const html = await response.text();
+  const html = await fetchWithElectronBrowser(url);
   const $ = cheerio.load(html);
   const results = $(".results_column div.game_cell");
   return results
@@ -55,6 +56,7 @@ export async function searchOnItchIo(query: string): Promise<ItchIoAssetPreview[
       const $el = $(el);
       const url = $el.find("a.title.game_link").attr("href");
       if (!url) throw new Error("Failed to parse url");
+      const price = $el.find(".price_value").length ? $el.find(".price_value").text() : null;
 
       const title = $el.find("a.title.game_link").text();
       const author = $el.find("div.game_author a").text();
@@ -65,6 +67,7 @@ export async function searchOnItchIo(query: string): Promise<ItchIoAssetPreview[
         title,
         author,
         url,
+        price,
         slug: itchIoUrlToId(url),
         images: image ? [image] : [],
         id: itchIoUrlToId(url),
@@ -141,7 +144,7 @@ export async function fetchDownloadUrls(
 
 export async function fetchItchIoAsset(url: string): Promise<ItchIoAsset> {
   const response = await fetch(url);
-  if (!response.ok) throw new Error("Failed to fetch assets");
+  if (!response.ok) throw await buildResponseNotOkError(response);
   const html = await response.text();
   const $ = cheerio.load(html);
   const vgPage = $(".view_game_page");
@@ -218,13 +221,14 @@ export async function fetchItchIoAsset(url: string): Promise<ItchIoAsset> {
     .get();
 
   const downloads = await fetchDownloadUrls(url, $);
+  const id = itchIoUrlToId(url);
   return {
     title: $("title").text(),
-    author: $("div.game_author a").text(),
+    author: parseId(id).author!,
     url,
-    slug: itchIoUrlToId(url),
+    slug: id,
     images,
-    id: itchIoUrlToId(url),
+    id,
     _asset_source: "itch.io" as const,
     downloads,
     meta,

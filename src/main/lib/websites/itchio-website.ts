@@ -2,7 +2,7 @@ import { AssetPreview, Asset, parseId } from "@shared/types";
 import { BaseWebsite } from "./base-website";
 import { TTLCache } from "@isaacs/ttlcache";
 import { makeMs } from "../utils";
-import * as itchIoApi from "../itch-io-api";
+import * as itchIoApi from "../websites-raw-api/itch-io-api";
 import { ItchIoAsset, ItchIoAssetPreview } from "../server-types";
 
 const ONE_DAY = makeMs({ days: 1 });
@@ -43,7 +43,8 @@ class ItchIoWebsite extends BaseWebsite {
       page_url: asset.url,
 
       tags: [],
-      title: asset.title
+      title: asset.title,
+      price: asset.price ?? undefined
     } satisfies AssetPreview;
   }
 

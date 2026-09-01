@@ -14,6 +14,9 @@ interface SearchState {
   setLoading: (loading: boolean) => void;
   setError: (error: Error | null) => void;
   setScroll: (scroll: { x: number; y: number }) => void;
+
+  hidePaidAssets: boolean;
+  setHidePaidAssets: (hidePaidAssets: boolean) => void;
 }
 
 export const useSearchStore = create<SearchState>((set) => ({
@@ -29,5 +32,8 @@ export const useSearchStore = create<SearchState>((set) => ({
   setResults: (results) => set({ results }),
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error }),
-  setScroll: (scroll) => set({ scroll })
+  setScroll: (scroll) => set({ scroll }),
+
+  hidePaidAssets: false,
+  setHidePaidAssets: (hidePaidAssets) => set({ hidePaidAssets })
 }));

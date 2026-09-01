@@ -4,18 +4,21 @@ import { AssetCard } from "@renderer/components/asset-card";
 import { useSearchStore } from "@renderer/store/search";
 
 function Home(): React.JSX.Element {
-  const query = useSearchStore((s) => s.query);
-  const source = useSearchStore((s) => s.source);
-  const results = useSearchStore((s) => s.results);
-  const loading = useSearchStore((s) => s.loading);
-  const error = useSearchStore((s) => s.error);
-
-  const setQuery = useSearchStore((s) => s.setQuery);
-  const setSource = useSearchStore((s) => s.setSource);
-  const setResults = useSearchStore((s) => s.setResults);
-  const setLoading = useSearchStore((s) => s.setLoading);
-  const setError = useSearchStore((s) => s.setError);
-  const setScroll = useSearchStore((s) => s.setScroll);
+  const {
+    error,
+    loading,
+    query,
+    results,
+    setQuery,
+    setResults,
+    setLoading,
+    setError,
+    setScroll,
+    source,
+    setSource,
+    hidePaidAssets,
+    setHidePaidAssets
+  } = useSearchStore();
 
   useEffect(() => {
     window.scrollTo(useSearchStore.getState().scroll.x, useSearchStore.getState().scroll.y);
@@ -46,38 +49,55 @@ function Home(): React.JSX.Element {
 
   return (
     <div className="min-h-dvh w-full">
-      <header className="join w-full p-4">
-        <input
-          type="text"
-          className="input join-item w-full"
-          placeholder="Search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+      <div>
+        <header className="join w-full p-4">
+          <input
+            type="text"
+            className="input join-item w-full"
+            placeholder="Search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
 
-        <select
-          value={source}
-          className="select appearance-none join flex items-center"
-          onChange={(e) => setSource(e.target.value as AssetSource)}
-        >
-          {ASSET_SOURCES.map((e) => (
-            <option key={e} value={e}>
-              {e}
-            </option>
-          ))}
-        </select>
+          <select
+            value={source}
+            className="select appearance-none join flex items-center"
+            onChange={(e) => setSource(e.target.value as AssetSource)}
+          >
+            {ASSET_SOURCES.map((e) => (
+              <option key={e} value={e}>
+                {e}
+              </option>
+            ))}
+          </select>
 
-        <button className="btn btn-primary join-item" onClick={searchCallback} disabled={loading}>
-          {loading ? "Searching..." : "Search"}
-        </button>
-      </header>
+          <button className="btn btn-primary join-item" onClick={searchCallback} disabled={loading}>
+            {loading ? "Searching..." : "Search"}
+          </button>
+        </header>
+        <div className="flex px-4 justify-end">
+          <label className="label">
+            <input
+              type="checkbox"
+              onChange={(e) => {
+                setHidePaidAssets(e.target.checked);
+              }}
+              checked={hidePaidAssets}
+              className="checkbox"
+            />
+            Hide paid assets
+          </label>
+        </div>
+      </div>
 
       {error && <p className="px-4 text-error">{error.message}</p>}
 
       <section className="grid grid-cols-[repeat(auto-fit,minmax(16rem,1fr))] gap-4 p-4">
-        {results.map((result) => (
-          <AssetCard key={result.id} result={result} query={query} />
-        ))}
+        {results
+          .filter((e) => !hidePaidAssets || e.price === undefined)
+          .map((result) => (
+            <AssetCard key={result.id} result={result} query={query} />
+          ))}
       </section>
     </div>
   );

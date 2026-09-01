@@ -2,7 +2,7 @@ import { AssetPreview, Asset, parseId } from "@shared/types";
 import { BaseWebsite } from "./base-website";
 import { TTLCache } from "@isaacs/ttlcache";
 import { makeMs } from "../utils";
-import * as kenneyApi from "../kenney-api";
+import * as kenneyApi from "../websites-raw-api/kenney-api";
 import Fuse from "fuse.js";
 import { KenneyAsset } from "../server-types";
 
