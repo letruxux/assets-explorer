@@ -49,7 +49,11 @@ class ItchIoWebsite extends BaseWebsite {
       id: asset.id,
       images: asset.images,
       page_url: parseId(asset.id).pageUrl,
-      tags: asset.metadata.tags ?? [],
+      tags: [
+        ...(asset.metadata.tags ?? []),
+        ...(asset.metadata.category ? [asset.metadata.category] : []),
+        ...(asset.metadata.series ? [asset.metadata.series] : [])
+      ],
       title: asset.title
     } satisfies AssetPreview;
   }

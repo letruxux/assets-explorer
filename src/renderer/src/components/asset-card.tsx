@@ -2,10 +2,11 @@ import { useInstalledAssetIds } from "@renderer/hooks/use-installed-asset-ids";
 import { cn } from "@renderer/lib/utils";
 import { useInstalledAssetsStore } from "@renderer/store/installed-assets";
 import { AssetPreview } from "@shared/types";
-import { useState, useMemo, useCallback } from "react";
+import { useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import Spinner from "./spinner";
 import { Folder, Trash2 } from "lucide-react";
+import useResult from "@renderer/hooks/use-result";
 
 export function AssetCard({
   result,
@@ -17,35 +18,21 @@ export function AssetCard({
   const { installedAssetIds } = useInstalledAssetIds();
   const { removeInstalledAssetId } = useInstalledAssetsStore();
 
-  const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState<Error | null>(null);
-
-  const openAssetFolderCallback = useCallback(async () => {
-    setDeleting(true);
-    setDeleteError(null);
-
-    try {
-      await window.api.openAssetFolder(result.id);
-    } catch (error) {
-      setDeleteError(error instanceof Error ? error : new Error(String(error)));
-    } finally {
-      setDeleting(false);
-    }
-  }, [result]);
-
-  const deleteCallback = useCallback(async () => {
-    setDeleting(true);
-    setDeleteError(null);
-
-    try {
+  const {
+    error: deleteError,
+    refetch: deleteCallback,
+    loading: deleting
+  } = useResult<void>(
+    useCallback(async () => {
       await window.api.deleteAsset(result.id);
       removeInstalledAssetId(result.id);
-    } catch (error) {
-      setDeleteError(error instanceof Error ? error : new Error(String(error)));
-    } finally {
-      setDeleting(false);
-    }
-  }, [result, removeInstalledAssetId]);
+    }, [result, removeInstalledAssetId]),
+    { autoFetchFirstTime: false }
+  );
+
+  const openAssetFolderCallback = useCallback(async () => {
+    await window.api.openAssetFolder(result.id);
+  }, [result]);
 
   const tagsInQuery = useMemo(
     () =>
@@ -60,6 +47,8 @@ export function AssetCard({
     () => installedAssetIds.includes(result.id),
     [installedAssetIds, result.id]
   );
+
+  const sortedTags = useMemo(() => result.tags.sort(), [result.tags]);
 
   return (
     <Link to={`/asset/${result.id}`}>
@@ -93,9 +82,9 @@ export function AssetCard({
             )}
           </div>
 
-          {result.tags.length > 0 && (
+          {sortedTags.length > 0 && (
             <div className="flex gap-x-2 w-full overflow-auto scrollbar-none">
-              {result.tags.map((e) => (
+              {sortedTags.map((e) => (
                 <span
                   className={cn("badge", {
                     "badge-primary": tagsInQuery.includes(e.toLowerCase()),

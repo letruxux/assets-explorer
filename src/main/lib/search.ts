@@ -14,7 +14,6 @@ export async function search(query: string, source: AssetSource): Promise<AssetP
 }
 
 export async function getAsset(id: string): Promise<Asset> {
-  throw new Error("LOOOOL");
   const { source } = parseId(id);
   switch (source) {
     case "kenney.nl":
