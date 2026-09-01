@@ -16,7 +16,12 @@ export interface AssetPreview {
   tags: string[];
   price?: string;
 }
-
+export interface ChangelogEntry {
+  name: string;
+  date: string;
+  page_url?: string;
+  description?: string;
+}
 export interface AssetMetadata {
   tags?: string[];
   category?: string;
@@ -32,6 +37,18 @@ export interface AssetMetadata {
 
   [key: string]: unknown;
 }
+export interface AssetFile {
+  /** asset name */
+  name: string;
+  /** when the file was uplaoded */
+  date?: string;
+  /** DIRECT download url */
+  direct_url: string;
+  /** download count */
+  download_count?: number;
+  /** file size, like "2 MB" */
+  file_size?: string;
+}
 export interface Asset {
   /** what website this asset is from  */
   _asset_source: AssetSource;
@@ -43,26 +60,10 @@ export interface Asset {
   /** generated with buildId() */
   id: string;
 
-  files: {
-    /** asset name */
-    name: string;
-    /** when the file was uplaoded */
-    date?: string;
-    /** DIRECT download url */
-    direct_url: string;
-    /** download count */
-    download_count?: number;
-    /** file size, like "2 MB" */
-    file_size?: string;
-  }[];
+  files: AssetFile[];
 
   /** updates  */
-  changelog: {
-    name: string;
-    date: string;
-    page_url?: string;
-    description?: string;
-  }[];
+  changelog: ChangelogEntry[];
 
   createdAt: string;
   updatedAt: string;
