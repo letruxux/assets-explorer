@@ -48,4 +48,8 @@ export default function setupRoutes(): void {
   ipcMain.handle("change-assets-path", async () => {
     return await actions.changeAssetsPath();
   });
+
+  ipcMain.handle("test-itch-io", async () => {
+    return await actions.testItchIo();
+  });
 }

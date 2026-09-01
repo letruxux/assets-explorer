@@ -1,31 +1,15 @@
 import { AssetCard } from "@renderer/components/asset-card";
+import useResult from "@renderer/hooks/use-result";
 import { AssetsManifestType } from "@shared/types";
 import { assetToAssetPreview } from "@shared/utils";
-import { useState, useEffect } from "react";
+import { useCallback } from "react";
 
 function About(): React.JSX.Element {
-  const [assetsManifest, setAssetsManifest] = useState<AssetsManifestType | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    async function loadAssetsManifest(): Promise<void> {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const assetsManifest = await window.api.readAssetsManifest();
-        if (!assetsManifest) throw new Error("No assets manifest");
-        setAssetsManifest(assetsManifest);
-      } catch (error) {
-        setError(error instanceof Error ? error : new Error(String(error)));
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadAssetsManifest();
-  }, []);
+  const {
+    loading,
+    data: assetsManifest,
+    error
+  } = useResult<AssetsManifestType | null>(useCallback(() => window.api.readAssetsManifest(), []));
 
   return (
     <div className="p-4">

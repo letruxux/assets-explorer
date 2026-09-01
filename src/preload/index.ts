@@ -32,6 +32,9 @@ const api = {
   },
   deleteAsset(assetId: string): Promise<void> {
     return ipcRenderer.invoke("delete-asset", assetId);
+  },
+  testItchIo(): Promise<string> {
+    return ipcRenderer.invoke("test-itch-io");
   }
 };
 
