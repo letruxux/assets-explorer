@@ -28,6 +28,7 @@ export type ItchIoAsset = {
     name: string;
     url: string;
     file_size: string;
+    free: boolean;
   }[];
 
   meta: {
@@ -99,7 +100,8 @@ export async function searchOnItchIo(query: string): Promise<ItchIoAssetPreview[
 
 export async function fetchDownloadUrls(
   url: string,
-  $: cheerio.CheerioAPI
+  $: cheerio.CheerioAPI,
+  downloadsPreview: { name: string; free: boolean }[]
 ): Promise<ItchIoAsset["downloads"]> {
   const csrfToken = $('meta[name="csrf_token"]').attr("value");
   if (!csrfToken) throw new Error("No csrf token found");
@@ -156,7 +158,8 @@ export async function fetchDownloadUrls(
         file_size,
         name: filename,
         url: finalUrl,
-        date: new Date(dateStr).toISOString()
+        date: new Date(dateStr).toISOString(),
+        free: downloadsPreview.find((e) => e.name === filename)?.free ?? true
       };
     }).get()
   );
@@ -177,19 +180,9 @@ export async function fetchItchIoAsset(url: string): Promise<ItchIoAsset> {
 
   const moreInfoTableRows = $(".info_panel_wrapper table tbody tr");
   const _raw_meta: Record<string, string> = {};
-  async function getRatingValue(): Promise<number> {
-    const ldJsons = $("script[type='application/ld+json']");
-    const ldJson = ldJsons.filter((_, el) => {
-      const $el = $(el);
-      return $el.text().includes('ratingValue":');
-    });
-    const parsed = JSON.parse(ldJson.text());
-    return Number(parsed.aggregateRating.ratingValue);
-  }
   /// @ts-ignore mustard
   const meta: ItchIoAsset["meta"] = {
-    Description: $('meta[name="description"]').attr("content"),
-    RatingValue: await getRatingValue().catch(() => 0)
+    Description: $('meta[name="description"]').attr("content")
   };
   /// @ts-ignore mustard
   const _extracted: ItchIoAsset["_extracted"] = {};
@@ -216,12 +209,24 @@ export async function fetchItchIoAsset(url: string): Promise<ItchIoAsset> {
         break;
       case "Rating":
         meta.RatingCount = Number($(valCell).find(".rating_count").attr("content") || "0");
+        meta.RatingValue = Number(
+          $(valCell).find('div[itemprop="ratingValue"]').attr("content") || "0"
+        );
         break;
       default:
         meta[key] = $(valCell).text();
         break;
     }
   }
+
+  const downloadsPreview = $(".uploads .upload_list_widget .upload")
+    .map((_, el) => {
+      const $el = $(el);
+      const name = $el.find(".upload_name strong").attr("title")!;
+      const free = $el.find(".file_price").text() === "";
+      return { name, free };
+    })
+    .get();
 
   const updates = $("#devlog ul li")
     .map((_, el) => {
@@ -237,7 +242,7 @@ export async function fetchItchIoAsset(url: string): Promise<ItchIoAsset> {
     })
     .get();
 
-  const downloads = await fetchDownloadUrls(url, $);
+  const downloads = await fetchDownloadUrls(url, $, downloadsPreview);
   const id = itchIoUrlToId(url);
   return {
     title: $("title").text(),
@@ -247,7 +252,24 @@ export async function fetchItchIoAsset(url: string): Promise<ItchIoAsset> {
     images,
     id,
     _asset_source: "itch.io" as const,
-    downloads,
+    downloads: (() => {
+      const finalMap = new Map<string, ItchIoAsset["downloads"][number]>();
+      for (const dl of downloads) {
+        finalMap.set(dl.name, dl);
+      }
+      for (const dl of downloadsPreview) {
+        if (!finalMap.has(dl.name)) {
+          finalMap.set(dl.name, {
+            date: new Date().toISOString(),
+            name: dl.name,
+            url: "",
+            file_size: "",
+            free: dl.free
+          });
+        }
+      }
+      return Array.from(finalMap.values());
+    })(),
     meta,
     _extracted,
     updates

@@ -8,9 +8,10 @@ import { Navigation, Pagination, A11y } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-import { Check, Download, ExternalLink, Loader2 } from "lucide-react";
+import { Check, Download, ExternalLink, Loader2, Lock } from "lucide-react";
 import useResult from "@renderer/hooks/use-result";
 import { useInstalledFiles } from "@renderer/store/use-installed-files";
+import { cn } from "@renderer/lib/utils";
 
 function MetadataValue({ name, value }: { name: string; value: unknown }): React.JSX.Element {
   switch (name.toLowerCase()) {
@@ -203,6 +204,7 @@ function ViewAsset(): React.JSX.Element {
       </div>
 
       <AssetDownloads asset={asset} />
+      <Changelog asset={asset} />
     </div>
   );
 }
@@ -237,18 +239,31 @@ function SingleAssetDownload({
     { autoFetchFirstTime: false }
   );
 
+  const locked = dl.direct_url === "";
+
   return (
     <tr key={dl.name}>
       <td className="font-mono flex gap-x-1 items-center h-16">
         <span className="px-1 py-0.5 bg-base-200">{dl.name}</span>
         {dl.file_size && <span className="text-xs text-gray-400">({dl.file_size})</span>}
       </td>
-      <td>{dl.date ? new Date(dl.date).toLocaleDateString() : "N/A"}</td>
+      <td>
+        {locked ? (
+          <span className="text-gray-400">
+            Locked - this file might require purchase to download.
+          </span>
+        ) : dl.date ? (
+          new Date(dl.date).toLocaleDateString()
+        ) : (
+          "N/A"
+        )}
+      </td>
       <td>
         {downloadError && <span className="text-error">{downloadError.message}</span>}
+
         <button
           className="btn btn-primary"
-          disabled={downloading || downloaded}
+          disabled={downloading || downloaded || locked}
           onClick={() => downloadFileCallback()}
         >
           {downloading ? (
@@ -258,6 +273,10 @@ function SingleAssetDownload({
           ) : downloaded ? (
             <>
               <Check /> Downloaded
+            </>
+          ) : locked ? (
+            <>
+              <Lock /> Locked
             </>
           ) : (
             <>
@@ -290,6 +309,43 @@ function AssetDownloads({ asset }: { asset: Asset }): React.JSX.Element {
             {asset.files.map((dl) => (
               <SingleAssetDownload key={dl.name} asset={asset} dl={dl} />
             ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
+
+function Changelog({ asset }: { asset: Asset }): React.JSX.Element {
+  if (asset.changelog.length === 0)
+    return (
+      <>
+        <h2 className="pt-4 pb-2 text-2xl font-bold">Changelog</h2>
+
+        <span className="text-sm text-gray-400">No changelog found</span>
+      </>
+    );
+
+  return (
+    <>
+      <h2 className="pt-4 pb-2 text-2xl font-bold">Changelog</h2>
+
+      <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
+        <table className="table">
+          <tbody>
+            {asset.changelog
+              .sort((a, b) => b.date.localeCompare(a.date))
+              .map(
+                (c) =>
+                  c.description && (
+                    <tr key={c.name} className="group">
+                      <td>
+                        <span className="badge group-first:badge-primary">{c.name}</span>
+                      </td>
+                      <td>{c.description}</td>
+                    </tr>
+                  )
+              )}
           </tbody>
         </table>
       </div>

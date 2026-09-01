@@ -61,6 +61,7 @@ export interface Asset {
     name: string;
     date: string;
     page_url?: string;
+    description?: string;
   }[];
 
   createdAt: string;

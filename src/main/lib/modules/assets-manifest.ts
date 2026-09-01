@@ -2,7 +2,7 @@ import { Asset, AssetsManifestType, InstalledFile } from "@shared/types";
 import fs from "fs";
 import { join } from "path";
 import { settings } from "./settings";
-import { ipcMain } from "electron";
+import { BrowserWindow } from "electron";
 
 class AssetsManifestFile {
   public data: AssetsManifestType;
@@ -21,7 +21,7 @@ class AssetsManifestFile {
 
   public save(): void {
     fs.writeFileSync(this.path, JSON.stringify(this.data, null, 2));
-    ipcMain.emit("installed-files-updated");
+    BrowserWindow.getAllWindows().forEach((w) => w.webContents.send("installed-files-updated"));
   }
 
   public removeInstalledFile(file: InstalledFile): void {
