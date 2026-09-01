@@ -56,9 +56,9 @@ export async function fetchAllKenneyAssets(): Promise<KenneyAsset[]> {
 }
 
 export async function fetchKenneyAsset(slug: string): Promise<KenneyAsset> {
-  const url = `https://github.com/letruxux/kenney-assets-registry/raw/refs/heads/main/data/full/${slug}.json`;
-  const response = await fetch(url);
-  if (!response.ok) throw new Error("Failed to fetch assets");
-  const base = (await response.json()) as unknown as KenneyAsset;
-  return transformKenneyAsset(base);
+  const asset = await fetchAllKenneyAssets().then((assets) =>
+    assets.find((asset) => asset.slug === slug)
+  );
+  if (!asset) throw new Error("Asset not found");
+  return asset;
 }
