@@ -1,9 +1,6 @@
 import { buildId, parseId } from "@shared/types";
 import * as cheerio from "cheerio";
-import { USER_AGENT } from "@lib/utils";
-import * as fs from "fs";
-import { tmpdir } from "os";
-import { join } from "path";
+import { buildResponseNotOkError, USER_AGENT } from "@lib/utils";
 import { fetchWithElectronBrowser } from "@lib/cf-solve";
 
 export type ItchIoAssetPreview = {
@@ -67,23 +64,6 @@ function itchIoUrlToId(url: string): string {
 
 function weirdDateParser(date: string): string {
   return new Date(date.replace(" @ ", " ")).toISOString();
-}
-
-async function buildResponseNotOkError(r: Response): Promise<Error> {
-  const text = await r.text();
-  const randomlyGeneratedFilename = `${Math.floor(Math.random() * 1000_000_000_000)}.html`;
-  const path = join(tmpdir(), randomlyGeneratedFilename);
-
-  fs.writeFileSync(path, text);
-
-  return new Error(
-    `
-Request failed ${r.status}
-  URL: ${r.url}
-  Status: ${r.statusText}
-  Text: ${path}
-`.trim()
-  );
 }
 
 export async function searchOnItchIo(query: string): Promise<ItchIoAssetPreview[]> {

@@ -1,5 +1,7 @@
 import { parseId } from "@shared/types";
-import { extname } from "path";
+import { writeFile } from "fs/promises";
+import { tmpdir } from "os";
+import { extname, join } from "path";
 
 export function makeMs({
   days,
@@ -92,4 +94,21 @@ export function guessAssetFilename(
     default:
       throw new Error(`Unknown asset source: ${source}`);
   }
+}
+
+export async function buildResponseNotOkError(r: Response): Promise<Error> {
+  const text = await r.text();
+  const randomlyGeneratedFilename = `${Math.floor(Math.random() * 1000_000_000_000)}.html`;
+  const path = join(tmpdir(), randomlyGeneratedFilename);
+
+  await writeFile(path, text);
+
+  return new Error(
+    `
+Request failed ${r.status}
+  URL: ${r.url}
+  Status: ${r.statusText}
+  Text: ${path}
+`.trim()
+  );
 }
