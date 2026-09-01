@@ -9,13 +9,14 @@ interface UseResultReturn<T> {
 
 interface UseResultOptions {
   autoFetchFirstTime?: boolean;
+  clearDataOnRefetch?: boolean;
 }
 
 export default function useResult<T>(
   initialValue: T | (() => T | Promise<T>),
   config?: UseResultOptions
 ): UseResultReturn<T> {
-  const { autoFetchFirstTime = true } = config ?? {};
+  const { autoFetchFirstTime = true, clearDataOnRefetch = true } = config ?? {};
 
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
@@ -23,7 +24,6 @@ export default function useResult<T>(
   const [fetchKey, setFetchKey] = useState(0);
 
   useEffect(() => {
-    // skip only the very first fetch
     if (fetchKey === 0 && !autoFetchFirstTime) {
       return;
     }
@@ -33,6 +33,7 @@ export default function useResult<T>(
     const loadResult = async (): Promise<void> => {
       setLoading(true);
       setError(null);
+      if (clearDataOnRefetch) setData(null);
 
       try {
         const value =
