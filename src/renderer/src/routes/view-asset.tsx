@@ -1,6 +1,6 @@
 import { Asset, parseId } from "@shared/types";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, A11y } from "swiper/modules";
@@ -11,7 +11,6 @@ import "swiper/css/pagination";
 import { Check, Download, ExternalLink, Loader2, Lock } from "lucide-react";
 import useResult from "@renderer/hooks/use-result";
 import { useInstalledFiles } from "@renderer/store/use-installed-files";
-import { cn } from "@renderer/lib/utils";
 
 function MetadataValue({ name, value }: { name: string; value: unknown }): React.JSX.Element {
   switch (name.toLowerCase()) {
@@ -84,6 +83,7 @@ function MetadataRow({ name, value }: { name: string; value: unknown }): React.J
 
 function ViewAsset(): React.JSX.Element {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [asset, setAsset] = useState<Asset | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -149,18 +149,18 @@ function ViewAsset(): React.JSX.Element {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold flex gap-x-2 items-center mb-1">
-        <button className="btn btn-sm btn-square" onClick={() => navigation.back()}>
+      <h1 className="text-xl sm:text-2xl font-bold flex gap-x-2 items-center mb-1 min-w-0">
+        <button className="btn btn-sm btn-square shrink-0" onClick={() => navigate(-1)}>
           &lt;
         </button>
-        <span className="flex items-center gap-x-2">
+        <span className="flex items-center gap-x-2 min-w-0">
           <a
             href={parseId(asset.id).pageUrl}
             rel="noreferrer"
             target="_blank"
-            className="flex items-center gap-x-2 hover:underline"
+            className="flex items-center gap-x-2 hover:underline min-w-0"
           >
-            <span className="truncate">{asset.title}</span> <ExternalLink className="inline" />
+            <span className="truncate">{asset.title}</span> <ExternalLink className="inline shrink-0" />
           </a>
           <small className="text-gray-500 text-xs">#{asset.id}</small>
         </span>
@@ -244,8 +244,8 @@ function SingleAssetDownload({
   return (
     <tr key={dl.name}>
       <td className="font-mono flex gap-x-1 items-center h-16">
-        <span className="px-1 py-0.5 bg-base-200">{dl.name}</span>
-        {dl.file_size && <span className="text-xs text-gray-400">({dl.file_size})</span>}
+        <span className="px-1 py-0.5 bg-base-200 truncate max-w-40">{dl.name}</span>
+        {dl.file_size && <span className="text-xs text-gray-400 shrink-0">({dl.file_size})</span>}
       </td>
       <td>
         {locked ? (

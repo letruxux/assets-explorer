@@ -69,22 +69,20 @@ export function AssetCard({
             <h4 className="text-gray-400">{result.author}</h4>
           </div>
 
-          {sortedTags.length > 0 && (
-            <div className="flex gap-x-2 w-full overflow-auto scrollbar-none">
-              <span className={cn("badge badge-accent")}>{result._asset_source}</span>
-              {sortedTags.map((e) => (
-                <span
-                  className={cn("badge whitespace-nowrap", {
-                    "badge-primary": tagsInQuery.includes(e.toLowerCase()),
-                    "badge-dash": !tagsInQuery.includes(e.toLowerCase())
-                  })}
-                  key={e}
-                >
-                  {e.toTitleCase()}
-                </span>
-              ))}
-            </div>
-          )}
+          <div className="flex gap-x-2 w-full overflow-auto scrollbar-none">
+            <span className={cn("badge badge-error")}>{result._asset_source}</span>
+            {sortedTags.map((e) => (
+              <span
+                className={cn("badge whitespace-nowrap", {
+                  "badge-primary": tagsInQuery.includes(e.toLowerCase()),
+                  "badge-dash": !tagsInQuery.includes(e.toLowerCase())
+                })}
+                key={e}
+              >
+                {e.toTitleCase()}
+              </span>
+            ))}
+          </div>
 
           {hasAnyFileInstalled && (
             <div className="card-actions mt-2 flex justify-end items-center">

@@ -50,7 +50,7 @@ function Settings(): React.JSX.Element {
                   <input
                     type="text"
                     disabled
-                    className="input"
+                    className="input flex-1 min-w-0"
                     value={settings.assetsPath ?? "-"}
                   />
                   <button

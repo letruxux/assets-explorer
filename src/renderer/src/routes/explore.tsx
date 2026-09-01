@@ -50,10 +50,10 @@ function Home(): React.JSX.Element {
   return (
     <div className="min-h-dvh w-full">
       <div>
-        <header className="join w-full p-4">
+        <header className="flex flex-col gap-2 p-4 sm:flex-row">
           <input
             type="text"
-            className="input join-item w-full"
+            className="input flex-1 min-w-0 w-full py-3 sm:py-0"
             placeholder="Search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -61,7 +61,7 @@ function Home(): React.JSX.Element {
 
           <select
             value={source}
-            className="select appearance-none join flex items-center"
+            className="select appearance-none shrink-0 sm:w-auto w-full"
             onChange={(e) => setSource(e.target.value as AssetSource)}
           >
             {ASSET_SOURCES.map((e) => (
@@ -71,7 +71,7 @@ function Home(): React.JSX.Element {
             ))}
           </select>
 
-          <button className="btn btn-primary join-item" onClick={searchCallback} disabled={loading}>
+          <button className="btn btn-primary shrink-0" onClick={searchCallback} disabled={loading}>
             {loading ? "Searching..." : "Search"}
           </button>
         </header>
@@ -92,7 +92,7 @@ function Home(): React.JSX.Element {
 
       {error && <p className="px-4 text-error">{error.message}</p>}
 
-      <section className="grid grid-cols-[repeat(auto-fit,minmax(16rem,1fr))] gap-4 p-4">
+      <section className="grid grid-cols-[repeat(auto-fit,minmax(min(16rem,100%),1fr))] gap-4 p-4">
         {results
           .filter((e) => !hidePaidAssets || e.price === undefined)
           .map((result) => (
