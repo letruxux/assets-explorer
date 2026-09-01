@@ -4,7 +4,6 @@ import { TTLCache } from "@isaacs/ttlcache";
 import { makeMs } from "@lib/utils";
 import * as kenneyApi from "@lib/websites-raw-api/kenney-api";
 import Fuse from "fuse.js";
-import { KenneyAsset } from "@lib/server-types";
 
 const ONE_DAY = makeMs({ days: 1 });
 
@@ -15,7 +14,7 @@ class ItchIoWebsite extends BaseWebsite {
   });
   kenneyAssetsCache = new TTLCache<string, Asset>({ max: 50, ttl: ONE_DAY });
 
-  private _normalizeAsset(asset: KenneyAsset): Asset {
+  private _normalizeAsset(asset: kenneyApi.KenneyAsset): Asset {
     return {
       _asset_source: asset._asset_source,
       author: "Kenney",

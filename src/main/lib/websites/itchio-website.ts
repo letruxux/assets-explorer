@@ -3,7 +3,6 @@ import { BaseWebsite } from "./base-website";
 import { TTLCache } from "@isaacs/ttlcache";
 import { makeMs } from "@lib/utils";
 import * as itchIoApi from "@lib/websites-raw-api/itch-io-api";
-import { ItchIoAsset, ItchIoAssetPreview } from "@lib/server-types";
 
 const ONE_DAY = makeMs({ days: 1 });
 
@@ -14,7 +13,7 @@ class ItchIoWebsite extends BaseWebsite {
     ttl: ONE_DAY
   });
 
-  private _normalizeAsset(asset: ItchIoAsset): Asset {
+  private _normalizeAsset(asset: itchIoApi.ItchIoAsset): Asset {
     return {
       _asset_source: asset._asset_source,
       author: asset.author,
@@ -34,7 +33,7 @@ class ItchIoWebsite extends BaseWebsite {
     } satisfies Asset;
   }
 
-  private _normalizeAssetPreview(asset: ItchIoAssetPreview): AssetPreview {
+  private _normalizeAssetPreview(asset: itchIoApi.ItchIoAssetPreview): AssetPreview {
     return {
       _asset_source: asset._asset_source,
       author: asset.author,
