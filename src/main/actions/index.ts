@@ -1,15 +1,15 @@
 import changeAssetsPath from "./change-assets-path";
 import deleteAsset from "./delete-asset";
 import downloadFile from "./download-file";
-import getInstalledAssetsIds from "./get-installed-assets-ids";
-import openAssetFolder from "./open-asset-folder";
+import getInstalledFiles from "./get-installed-files";
+import openFileFolder from "./open-file-folder";
 import testItchIo from "./test-itch-io";
 
 export const actions = {
-  openAssetFolder,
+  openFileFolder,
   deleteAsset,
   downloadFile,
-  getInstalledAssetsIds,
+  getInstalledFiles,
   changeAssetsPath,
   testItchIo
 };

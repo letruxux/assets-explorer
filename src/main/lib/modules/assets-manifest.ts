@@ -1,4 +1,4 @@
-import { AssetsManifestType } from "@shared/types";
+import { Asset, AssetsManifestType } from "@shared/types";
 import fs from "fs";
 import { join } from "path";
 import { settings } from "./settings";
@@ -15,7 +15,7 @@ class AssetsManifestFile {
 
   private load(): AssetsManifestType {
     const exists = fs.existsSync(this.path);
-    if (!exists) return { installedAssets: [] };
+    if (!exists) return { cachedAssets: [], installedFiles: [] };
     return JSON.parse(fs.readFileSync(this.path, "utf8")) as AssetsManifestType;
   }
 
@@ -26,15 +26,35 @@ class AssetsManifestFile {
     fs.writeFileSync(this.path, JSON.stringify(this.data, null, 2));
   }
 
-  public remove(assetId: string): void {
-    this.data.installedAssets = this.data.installedAssets.filter(
-      (e) => e.cachedAsset.id !== assetId
-    );
+  public removeInstalledFile(file: AssetsManifestType["installedFiles"][number]): void {
+    this.data.installedFiles = this.data.installedFiles.filter((e) => !Object.equals(e, file));
     this.save();
   }
 
-  public add(asset: AssetsManifestType["installedAssets"][number]): void {
-    this.data.installedAssets.push(asset);
+  public getInstalledFile(
+    file: AssetsManifestType["installedFiles"][number]
+  ): AssetsManifestType["installedFiles"][number] | undefined {
+    return this.data.installedFiles.find((e) => Object.equals(e, file));
+  }
+
+  public add(asset: Asset, file: Asset["files"][number], installPath: string): void {
+    const alreadyCachedAsset = this.data.cachedAssets.find((e) => e.id === asset.id);
+    if (alreadyCachedAsset) {
+      this.data.cachedAssets = [...this.data.cachedAssets.filter((e) => e.id !== asset.id), asset];
+    } else {
+      this.data.cachedAssets.push(asset);
+    }
+
+    if (this.data.installedFiles.find((e) => Object.equals(e.file, file))) {
+      throw new Error("Asset already installed");
+    }
+
+    this.data.installedFiles.push({
+      assetId: asset.id,
+      file,
+      installDate: new Date().toISOString(),
+      installPath
+    });
     this.save();
   }
 }

@@ -75,10 +75,12 @@ export interface SettingsType {
 }
 
 export interface AssetsManifestType {
-  installedAssets: {
+  cachedAssets: Asset[];
+  installedFiles: {
+    file: Asset["files"][number];
+    assetId: string;
     installPath: string;
     installDate: string;
-    cachedAsset: Asset;
   }[];
 }
 

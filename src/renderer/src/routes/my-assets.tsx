@@ -18,11 +18,8 @@ function About(): React.JSX.Element {
       {loading && <p>Loading...</p>}
       {assetsManifest && (
         <section className="grid grid-cols-[repeat(auto-fit,minmax(16rem,1fr))] gap-4 mt-4">
-          {assetsManifest.installedAssets.map((result) => (
-            <AssetCard
-              key={result.cachedAsset.id}
-              result={assetToAssetPreview(result.cachedAsset)}
-            />
+          {assetsManifest.cachedAssets.map((result) => (
+            <AssetCard key={result.id} result={assetToAssetPreview(result)} />
           ))}
         </section>
       )}

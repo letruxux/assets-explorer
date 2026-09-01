@@ -1,11 +1,8 @@
-import { useInstalledAssetIds } from "@renderer/hooks/use-installed-asset-ids";
 import { cn } from "@renderer/lib/utils";
-import { useInstalledAssetsStore } from "@renderer/store/installed-assets";
 import { AssetPreview } from "@shared/types";
 import { useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
-import Spinner from "./spinner";
-import { Folder, Trash2 } from "lucide-react";
+import { Folder } from "lucide-react";
 import useResult from "@renderer/hooks/use-result";
 
 export function AssetCard({
@@ -15,24 +12,24 @@ export function AssetCard({
   result: AssetPreview;
   query?: string;
 }): React.JSX.Element {
-  const { installedAssetIds } = useInstalledAssetIds();
-  const { removeInstalledAssetId } = useInstalledAssetsStore();
+  const { data: installedFiles } = useResult(
+    useCallback(() => window.api.getInstalledFiles(), []),
+    {}
+  );
 
-  const {
-    error: deleteError,
-    refetch: deleteCallback,
-    loading: deleting
-  } = useResult<void>(
-    useCallback(async () => {
-      await window.api.deleteAsset(result.id);
-      removeInstalledAssetId(result.id);
-    }, [result, removeInstalledAssetId]),
-    { autoFetchFirstTime: false }
+  const allInstalledFilesOfAsset = useMemo(
+    () => (installedFiles ?? []).filter((file) => file.assetId === result.id),
+    [installedFiles, result]
+  );
+
+  const hasAnyFileInstalled = useMemo(
+    () => allInstalledFilesOfAsset.length > 0,
+    [allInstalledFilesOfAsset]
   );
 
   const openAssetFolderCallback = useCallback(async () => {
-    await window.api.openAssetFolder(result.id);
-  }, [result]);
+    await window.api.openFileFolder(allInstalledFilesOfAsset[0]);
+  }, [allInstalledFilesOfAsset]);
 
   const tagsInQuery = useMemo(
     () =>
@@ -43,18 +40,13 @@ export function AssetCard({
     [query]
   );
 
-  const isDownloaded = useMemo(
-    () => installedAssetIds.includes(result.id),
-    [installedAssetIds, result.id]
-  );
-
   const sortedTags = useMemo(() => result.tags.sort(), [result.tags]);
 
   return (
     <Link to={`/asset/${result.id}`}>
       <article
         className={cn("card w-full bg-base-100 shadow-sm card-border", {
-          "border-green-400": isDownloaded
+          "border-green-400": hasAnyFileInstalled
         })}
       >
         <figure
@@ -97,34 +89,22 @@ export function AssetCard({
               ))}
             </div>
           )}
-          {!!(deleteError || isDownloaded) && (
-            <div className="card-actions mt-2 flex justify-end">
-              {deleteError && <span className="text-error">{deleteError.message}</span>}
 
-              {isDownloaded && (
-                <button
-                  className="btn btn-square btn-error btn-ghost"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    deleteCallback();
-                  }}
-                >
-                  {deleting ? <Spinner /> : <Trash2 />}
-                </button>
-              )}
-              {isDownloaded && (
-                <button
-                  className="btn btn-square"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    openAssetFolderCallback();
-                  }}
-                >
-                  <Folder />
-                </button>
-              )}
+          {hasAnyFileInstalled && (
+            <div className="card-actions mt-2 flex justify-end items-center">
+              <span className="text-gray-400">
+                {allInstalledFilesOfAsset.length > 1 && allInstalledFilesOfAsset.length}
+              </span>
+              <button
+                className="btn btn-square"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  openAssetFolderCallback();
+                }}
+              >
+                <Folder />
+              </button>
             </div>
           )}
         </div>

@@ -1,19 +1,18 @@
 import { getAssetsManifest } from "../lib/modules/assets-manifest";
-import { parseId } from "@shared/types";
+import { Asset, parseId } from "@shared/types";
 import JSZip from "jszip";
 import { createExtractorFromFile } from "node-unrar-js";
 import { join, sep, dirname, resolve } from "path";
-import { getAsset } from "../lib/search";
 import { settings } from "../lib/modules/settings";
 import { guessAssetFilename } from "../lib/utils";
 import * as fs from "fs";
 
 export default async function downloadFile(
-  url: string,
-  assetName: string,
-  assetId: string
+  asset: Asset,
+  file: Asset["files"][number]
 ): Promise<void> {
-  const { slug } = parseId(assetId);
+  const { slug } = parseId(asset.id);
+  const { direct_url: url, name: assetName } = file;
 
   const assetsPath = settings.get("assetsPath");
 
@@ -22,7 +21,7 @@ export default async function downloadFile(
   }
 
   const response = await fetch(url);
-  const filename = guessAssetFilename(url, assetName, assetId, response.headers);
+  const filename = guessAssetFilename(url, assetName, asset.id, response.headers);
 
   if (!response.ok) {
     throw new Error(`Failed to download asset: ${response.status} ${response.statusText}`);
@@ -65,20 +64,6 @@ export default async function downloadFile(
           zipEntry.nodeStream().on("error", reject).pipe(output);
         });
       }
-
-      const manifest = getAssetsManifest();
-
-      if (!manifest) {
-        throw new Error("No assets manifest");
-      }
-
-      const fullAsset = await getAsset(assetId);
-
-      manifest.add({
-        cachedAsset: fullAsset,
-        installDate: new Date().toISOString(),
-        installPath: targetFolder
-      });
     } finally {
       await fs.promises.unlink(filePath).catch(() => {});
     }
@@ -118,11 +103,5 @@ export default async function downloadFile(
     throw new Error("No assets manifest");
   }
 
-  const fullAsset = await getAsset(assetId);
-
-  manifest.add({
-    cachedAsset: fullAsset,
-    installDate: new Date().toISOString(),
-    installPath: targetFolder
-  });
+  manifest.add(asset, file, targetFolder);
 }

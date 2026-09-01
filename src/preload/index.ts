@@ -9,14 +9,11 @@ const api = {
   fetchAssetDetail(id: string): Promise<Asset> {
     return ipcRenderer.invoke("asset-detail", id);
   },
-  getInstalledAssetsIds(): Promise<string[]> {
-    return ipcRenderer.invoke("get-installed-assets-ids");
+  getInstalledFiles(): Promise<AssetsManifestType["installedFiles"]> {
+    return ipcRenderer.invoke("get-installed-files");
   },
-  downloadAsset(asset: Asset | AssetPreview) {
-    return ipcRenderer.invoke("asset-download", asset);
-  },
-  downloadFile(url: string, assetName: string, assetId: string) {
-    return ipcRenderer.invoke("download-file", url, assetName, assetId);
+  downloadFile(asset: Asset, file: Asset["files"][number]) {
+    return ipcRenderer.invoke("download-file", asset, file);
   },
   readSettings(): Promise<SettingsType> {
     return ipcRenderer.invoke("settings-read");
@@ -27,11 +24,11 @@ const api = {
   readAssetsManifest(): Promise<AssetsManifestType | null> {
     return ipcRenderer.invoke("assetsmanifest-read");
   },
-  openAssetFolder(assetId: string): Promise<void> {
-    return ipcRenderer.invoke("open-asset-folder", assetId);
+  openFileFolder(file: AssetsManifestType["installedFiles"][number]): Promise<void> {
+    return ipcRenderer.invoke("open-file-folder", file);
   },
-  deleteAsset(assetId: string): Promise<void> {
-    return ipcRenderer.invoke("delete-asset", assetId);
+  deleteFile(installedFile: AssetsManifestType["installedFiles"][number]): Promise<void> {
+    return ipcRenderer.invoke("delete-file", installedFile);
   },
   testItchIo(): Promise<string> {
     return ipcRenderer.invoke("test-itch-io");

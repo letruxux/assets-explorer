@@ -1,16 +1,16 @@
+import { AssetsManifestType } from "@shared/types";
 import { getAssetsManifest } from "../lib/modules/assets-manifest";
 import * as fs from "fs";
 
-export default async function deleteAsset(assetId: string): Promise<void> {
+export default async function deleteAsset(
+  file: AssetsManifestType["installedFiles"][number]
+): Promise<void> {
   const assetsManifest = getAssetsManifest();
   if (!assetsManifest) throw new Error("No assets manifest");
 
-  const asset = assetsManifest.data.installedAssets.find((e) => e.cachedAsset.id === assetId);
-  if (!asset) throw new Error("Asset not found");
+  const foundFile = assetsManifest.getInstalledFile(file);
+  if (!foundFile) throw new Error("File not found");
 
-  await fs.promises.rm(asset.installPath, { recursive: true });
-  assetsManifest.data.installedAssets = assetsManifest.data.installedAssets.filter(
-    (e) => e.cachedAsset.id !== assetId
-  );
-  assetsManifest.save();
+  await fs.promises.rm(foundFile.installPath, { recursive: true });
+  assetsManifest.removeInstalledFile(foundFile);
 }

@@ -1,7 +1,7 @@
 import { ipcMain } from "electron";
 import { settings } from "@modules/settings";
 import { getAssetsManifest } from "@modules/assets-manifest";
-import { AssetPreview, AssetSource } from "@shared/types";
+import { Asset, AssetPreview, AssetsManifestType, AssetSource } from "@shared/types";
 import { getAsset, search } from "@lib/search";
 import { actions } from "./actions";
 
@@ -14,27 +14,30 @@ export default function setupRoutes(): void {
     }
   );
 
-  ipcMain.handle("open-asset-folder", (_event, assetId: string) => {
-    return actions.openAssetFolder(assetId);
-  });
+  ipcMain.handle(
+    "open-file-folder",
+    (_event, file: AssetsManifestType["installedFiles"][number]) => {
+      return actions.openFileFolder(file);
+    }
+  );
 
-  ipcMain.handle("delete-asset", async (_event, assetId: string) => {
-    return await actions.deleteAsset(assetId);
-  });
+  ipcMain.handle(
+    "delete-file",
+    async (_event, installedFile: AssetsManifestType["installedFiles"][number]) => {
+      return await actions.deleteAsset(installedFile);
+    }
+  );
 
   ipcMain.handle("asset-detail", async (_event, id: string) => {
     return await getAsset(id);
   });
 
-  ipcMain.handle(
-    "download-file",
-    async (_event, url: string, assetName: string, assetId: string) => {
-      return await actions.downloadFile(url, assetName, assetId);
-    }
-  );
+  ipcMain.handle("download-file", async (_event, asset: Asset, file: Asset["files"][number]) => {
+    return await actions.downloadFile(asset, file);
+  });
 
-  ipcMain.handle("get-installed-assets-ids", () => {
-    return actions.getInstalledAssetsIds();
+  ipcMain.handle("get-installed-files", () => {
+    return actions.getInstalledFiles();
   });
 
   ipcMain.handle("settings-read", async () => {

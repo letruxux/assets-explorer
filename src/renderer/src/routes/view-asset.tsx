@@ -8,8 +8,8 @@ import { Navigation, Pagination, A11y } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-import { ExternalLink } from "lucide-react";
-import { useInstalledAssetIds } from "@renderer/hooks/use-installed-asset-ids";
+import { Check, Download, ExternalLink, Loader2 } from "lucide-react";
+import useResult from "@renderer/hooks/use-result";
 
 function MetadataValue({ name, value }: { name: string; value: unknown }): React.JSX.Element {
   switch (name) {
@@ -34,18 +34,9 @@ function MetadataValue({ name, value }: { name: string; value: unknown }): React
 
 function ViewAsset(): React.JSX.Element {
   const { id } = useParams();
-  const { installedAssetIds, refetch } = useInstalledAssetIds();
   const [asset, setAsset] = useState<Asset | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-
-  const [downloading, setDownloading] = useState(false);
-  const [downloadError, setDownloadError] = useState<Error | null>(null);
-
-  const downloaded = useMemo(
-    () => (asset ? installedAssetIds.includes(asset?.id) : false),
-    [installedAssetIds, asset]
-  );
 
   useEffect(() => {
     let cancelled = false;
@@ -79,23 +70,6 @@ function ViewAsset(): React.JSX.Element {
       cancelled = true;
     };
   }, [id]);
-
-  const downloadFileCallback = useCallback(
-    async (file: Asset["files"][number]) => {
-      if (!asset) return;
-      setDownloading(true);
-      setDownloadError(null);
-      try {
-        await window.api.downloadFile(file.direct_url, file.name, asset.id);
-      } catch (err) {
-        setDownloadError(err instanceof Error ? err : new Error(String(err)));
-      } finally {
-        setDownloading(false);
-      }
-      await refetch();
-    },
-    [asset, refetch]
-  );
 
   if (loading) {
     return <div className="p-4">Loading...</div>;
@@ -170,40 +144,101 @@ function ViewAsset(): React.JSX.Element {
         </table>
       </div>
 
-      {asset.files.length > 0 && (
-        <>
-          <h2 className="pt-4 pb-2 text-2xl font-bold">Files</h2>
-
-          <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
-            <table className="table">
-              <tbody>
-                {asset.files.map((dl) => (
-                  <tr key={dl.name}>
-                    <td className="font-mono flex gap-x-1 items-center h-16">
-                      <span className="px-1 py-0.5 bg-base-200">{dl.name}</span>
-                      {dl.file_size && (
-                        <span className="text-xs text-gray-400">({dl.file_size})</span>
-                      )}
-                    </td>
-                    <td>{dl.date ? new Date(dl.date).toLocaleDateString() : "N/A"}</td>
-                    <td>
-                      {downloadError && <span className="text-error">{downloadError.message}</span>}
-                      <button
-                        className="btn btn-primary"
-                        disabled={downloading || downloaded}
-                        onClick={() => downloadFileCallback(dl)}
-                      >
-                        Download
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
+      <AssetDownloads asset={asset} />
     </div>
+  );
+}
+
+function SingleAssetDownload({
+  asset,
+  dl
+}: {
+  asset: Asset;
+  dl: Asset["files"][number];
+}): React.JSX.Element {
+  const { data: installedFiles } = useResult(
+    useCallback(() => window.api.getInstalledFiles(), []),
+    {}
+  );
+
+  const downloaded = useMemo(
+    () =>
+      asset
+        ? (installedFiles ?? []).filter(
+            (installedFile) =>
+              installedFile.assetId === asset.id && Object.equals(installedFile.file, dl)
+          ).length > 0
+        : false,
+    [asset, installedFiles, dl]
+  );
+  const {
+    error: downloadError,
+    refetch: downloadFileCallback,
+    loading: downloading
+  } = useResult<void>(
+    useCallback(async () => {
+      await window.api.downloadFile(asset, dl);
+    }, [asset, dl]),
+    { autoFetchFirstTime: false }
+  );
+
+  return (
+    <tr key={dl.name}>
+      <td className="font-mono flex gap-x-1 items-center h-16">
+        <span className="px-1 py-0.5 bg-base-200">{dl.name}</span>
+        {dl.file_size && <span className="text-xs text-gray-400">({dl.file_size})</span>}
+      </td>
+      <td>{dl.date ? new Date(dl.date).toLocaleDateString() : "N/A"}</td>
+      <td>
+        {downloadError && <span className="text-error">{downloadError.message}</span>}
+        <button
+          className="btn btn-primary"
+          disabled={downloading || downloaded}
+          onClick={() => downloadFileCallback()}
+        >
+          {downloading ? (
+            <>
+              <Loader2 className="animate-spin" /> Downloading...
+            </>
+          ) : downloaded ? (
+            <>
+              <Check /> Downloaded
+            </>
+          ) : (
+            <>
+              <Download /> Download
+            </>
+          )}
+        </button>
+      </td>
+    </tr>
+  );
+}
+
+function AssetDownloads({ asset }: { asset: Asset }): React.JSX.Element {
+  if (asset.files.length === 0)
+    return (
+      <>
+        <h2 className="pt-4 pb-2 text-2xl font-bold">Files</h2>
+
+        <span className="text-sm text-gray-400">No downloadable files found</span>
+      </>
+    );
+
+  return (
+    <>
+      <h2 className="pt-4 pb-2 text-2xl font-bold">Files</h2>
+
+      <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
+        <table className="table">
+          <tbody>
+            {asset.files.map((dl) => (
+              <SingleAssetDownload key={dl.name} asset={asset} dl={dl} />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 
