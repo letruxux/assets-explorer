@@ -1,10 +1,8 @@
-import { AssetsManifestType } from "@shared/types";
+import { InstalledFile } from "@shared/types";
 import { getAssetsManifest } from "../lib/modules/assets-manifest";
 import * as fs from "fs";
 
-export default async function deleteAsset(
-  file: AssetsManifestType["installedFiles"][number]
-): Promise<void> {
+export default async function deleteAsset(file: InstalledFile): Promise<void> {
   const assetsManifest = getAssetsManifest();
   if (!assetsManifest) throw new Error("No assets manifest");
 

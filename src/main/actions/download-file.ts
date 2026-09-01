@@ -1,10 +1,10 @@
-import { getAssetsManifest } from "../lib/modules/assets-manifest";
+import { getAssetsManifest } from "@modules/assets-manifest";
 import { Asset, parseId } from "@shared/types";
 import JSZip from "jszip";
 import { createExtractorFromFile } from "node-unrar-js";
 import { join, sep, dirname, resolve } from "path";
-import { settings } from "../lib/modules/settings";
-import { guessAssetFilename } from "../lib/utils";
+import { settings } from "@lib/modules/settings";
+import { guessAssetFilename } from "@lib/utils";
 import * as fs from "fs";
 
 export default async function downloadFile(

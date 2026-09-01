@@ -1,6 +1,13 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { electronAPI } from "@electron-toolkit/preload";
-import { Asset, AssetPreview, AssetsManifestType, AssetSource, SettingsType } from "@shared/types";
+import {
+  Asset,
+  AssetPreview,
+  AssetsManifestType,
+  AssetSource,
+  InstalledFile,
+  SettingsType
+} from "@shared/types";
 
 const api = {
   searchAssets(query: string, source: AssetSource): Promise<AssetPreview[]> {
@@ -24,10 +31,10 @@ const api = {
   readAssetsManifest(): Promise<AssetsManifestType | null> {
     return ipcRenderer.invoke("assetsmanifest-read");
   },
-  openFileFolder(file: AssetsManifestType["installedFiles"][number]): Promise<void> {
+  openFileFolder(file: InstalledFile): Promise<void> {
     return ipcRenderer.invoke("open-file-folder", file);
   },
-  deleteFile(installedFile: AssetsManifestType["installedFiles"][number]): Promise<void> {
+  deleteFile(installedFile: InstalledFile): Promise<void> {
     return ipcRenderer.invoke("delete-file", installedFile);
   },
   testItchIo(): Promise<string> {

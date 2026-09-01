@@ -1,4 +1,4 @@
-import { Asset, AssetsManifestType } from "@shared/types";
+import { Asset, AssetsManifestType, InstalledFile } from "@shared/types";
 import fs from "fs";
 import { join } from "path";
 import { settings } from "./settings";
@@ -26,14 +26,12 @@ class AssetsManifestFile {
     fs.writeFileSync(this.path, JSON.stringify(this.data, null, 2));
   }
 
-  public removeInstalledFile(file: AssetsManifestType["installedFiles"][number]): void {
+  public removeInstalledFile(file: InstalledFile): void {
     this.data.installedFiles = this.data.installedFiles.filter((e) => !Object.equals(e, file));
     this.save();
   }
 
-  public getInstalledFile(
-    file: AssetsManifestType["installedFiles"][number]
-  ): AssetsManifestType["installedFiles"][number] | undefined {
+  public getInstalledFile(file: InstalledFile): InstalledFile | undefined {
     return this.data.installedFiles.find((e) => Object.equals(e, file));
   }
 

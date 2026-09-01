@@ -74,14 +74,16 @@ export interface SettingsType {
   assetsPath: string;
 }
 
+export interface InstalledFile {
+  file: Asset["files"][number];
+  assetId: string;
+  installPath: string;
+  installDate: string;
+}
+
 export interface AssetsManifestType {
   cachedAssets: Asset[];
-  installedFiles: {
-    file: Asset["files"][number];
-    assetId: string;
-    installPath: string;
-    installDate: string;
-  }[];
+  installedFiles: InstalledFile[];
 }
 
 export function buildId(source: AssetSource, ...extra: string[]): string {

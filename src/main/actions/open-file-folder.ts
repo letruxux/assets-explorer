@@ -1,8 +1,8 @@
 import { shell } from "electron";
 import { getAssetsManifest } from "../lib/modules/assets-manifest";
-import { AssetsManifestType } from "@shared/types";
+import { InstalledFile } from "@shared/types";
 
-export default function openFileFolder(file: AssetsManifestType["installedFiles"][number]): void {
+export default function openFileFolder(file: InstalledFile): void {
   const assetsManifest = getAssetsManifest();
   if (!assetsManifest) throw new Error("No assets manifest");
 

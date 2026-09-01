@@ -1,7 +1,7 @@
 import { ipcMain } from "electron";
 import { settings } from "@modules/settings";
 import { getAssetsManifest } from "@modules/assets-manifest";
-import { Asset, AssetPreview, AssetsManifestType, AssetSource } from "@shared/types";
+import { Asset, AssetPreview, AssetSource, InstalledFile } from "@shared/types";
 import { getAsset, search } from "@lib/search";
 import { actions } from "./actions";
 
@@ -14,19 +14,13 @@ export default function setupRoutes(): void {
     }
   );
 
-  ipcMain.handle(
-    "open-file-folder",
-    (_event, file: AssetsManifestType["installedFiles"][number]) => {
-      return actions.openFileFolder(file);
-    }
-  );
+  ipcMain.handle("open-file-folder", (_event, file: InstalledFile) => {
+    return actions.openFileFolder(file);
+  });
 
-  ipcMain.handle(
-    "delete-file",
-    async (_event, installedFile: AssetsManifestType["installedFiles"][number]) => {
-      return await actions.deleteAsset(installedFile);
-    }
-  );
+  ipcMain.handle("delete-file", async (_event, installedFile: InstalledFile) => {
+    return await actions.deleteAsset(installedFile);
+  });
 
   ipcMain.handle("asset-detail", async (_event, id: string) => {
     return await getAsset(id);
