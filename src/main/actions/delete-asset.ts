@@ -8,7 +8,7 @@ export default async function deleteAsset(assetId: string): Promise<void> {
   const asset = assetsManifest.data.installedAssets.find((e) => e.cachedAsset.id === assetId);
   if (!asset) throw new Error("Asset not found");
 
-  await fs.promises.unlink(asset.installPath);
+  await fs.promises.rm(asset.installPath, { recursive: true });
   assetsManifest.data.installedAssets = assetsManifest.data.installedAssets.filter(
     (e) => e.cachedAsset.id !== assetId
   );
