@@ -7,6 +7,8 @@ import About from "./routes/my-assets";
 import "./assets/index.css";
 import ViewAsset from "./routes/view-asset";
 import Settings from "./routes/settings";
+import ErrorFallback from "./components/error-page";
+import { ErrorBoundary } from "react-error-boundary";
 
 declare global {
   interface String {
@@ -21,14 +23,16 @@ String.prototype.toTitleCase = function () {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <HashRouter>
-      <Routes>
-        <Route path="/" element={<App />}>
-          <Route index element={<Home />} />
-          <Route path="my-assets" element={<About />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="asset/:id" element={<ViewAsset />} />
-        </Route>
-      </Routes>
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Routes>
+          <Route path="/" element={<App />}>
+            <Route index element={<Home />} />
+            <Route path="my-assets" element={<About />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="asset/:id" element={<ViewAsset />} />
+          </Route>
+        </Routes>
+      </ErrorBoundary>
     </HashRouter>
   </StrictMode>
 );

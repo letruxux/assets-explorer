@@ -102,7 +102,7 @@ function ViewAsset(): React.JSX.Element {
   }
 
   if (error) {
-    return <div className="p-4 text-red-500">Error: {error.message}</div>;
+    throw error;
   }
 
   if (!asset) {
