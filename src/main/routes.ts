@@ -4,6 +4,7 @@ import { getAssetsManifest } from "@modules/assets-manifest";
 import { getAsset, search } from "@lib/search";
 import { actions } from "./actions";
 import type { ApiType } from "@shared/api";
+import type { InstalledFile } from "@shared/types";
 
 const api: ApiType = {
   changeAssetsPath() {
@@ -44,6 +45,14 @@ const api: ApiType = {
 
   fetchAssetDetail(id) {
     return getAsset(id);
+  },
+
+  checkForDeletedFiles() {
+    return actions.checkForDeletedFiles();
+  },
+
+  deleteStaleDatabaseEntries(files: InstalledFile[]) {
+    return actions.deleteStaleDbEntries(files);
   }
 } satisfies ApiType;
 

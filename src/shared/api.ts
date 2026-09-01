@@ -19,6 +19,11 @@ export type ApiType = {
   openFileFolder(file: InstalledFile): Promise<void>;
   deleteFile(installedFile: InstalledFile): Promise<void>;
   testItchIo(): Promise<string>;
+  checkForDeletedFiles(): Promise<{
+    found: number;
+    deletedFiles: InstalledFile[];
+  }>;
+  deleteStaleDatabaseEntries(files: InstalledFile[]): Promise<number>;
 };
 
 export const API_CHANNELS = [
@@ -31,7 +36,9 @@ export const API_CHANNELS = [
   "readAssetsManifest",
   "openFileFolder",
   "deleteFile",
-  "testItchIo"
+  "testItchIo",
+  "checkForDeletedFiles",
+  "deleteStaleDatabaseEntries"
 ] as const satisfies Array<keyof ApiType>;
 
 type AssertAllApiChannelsIncluded =

@@ -5,6 +5,7 @@ interface UseResultReturn<T> {
   loading: boolean;
   error: Error | null;
   refetch: () => void;
+  reset: () => void;
 }
 
 interface UseResultOptions {
@@ -66,5 +67,12 @@ export default function useResult<T>(
     setFetchKey((prev) => prev + 1);
   };
 
-  return { data, loading, error, refetch };
+  const reset = (): void => {
+    setFetchKey(0);
+    setData(null);
+    setError(null);
+    setLoading(false);
+  };
+
+  return { data, loading, error, refetch, reset };
 }
