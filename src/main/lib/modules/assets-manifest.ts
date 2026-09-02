@@ -1,4 +1,5 @@
 import { Asset, AssetsManifestType, InstalledFile } from "@shared/types";
+import { deepEquals } from "@shared/utils";
 import fs from "fs";
 import { join } from "path";
 import { settings } from "./settings";
@@ -25,12 +26,12 @@ class AssetsManifestFile {
   }
 
   public removeInstalledFile(file: InstalledFile): void {
-    this.data.installedFiles = this.data.installedFiles.filter((e) => !Object.equals(e, file));
+    this.data.installedFiles = this.data.installedFiles.filter((e) => !deepEquals(e, file));
     this.save();
   }
 
   public getInstalledFile(file: InstalledFile): InstalledFile | undefined {
-    return this.data.installedFiles.find((e) => Object.equals(e, file));
+    return this.data.installedFiles.find((e) => deepEquals(e, file));
   }
 
   public add(asset: Asset, file: Asset["files"][number], installPath: string): void {
@@ -41,7 +42,7 @@ class AssetsManifestFile {
       this.data.cachedAssets.push(asset);
     }
 
-    if (this.data.installedFiles.find((e) => Object.equals(e.file, file))) {
+    if (this.data.installedFiles.find((e) => deepEquals(e.file, file))) {
       throw new Error("Asset already installed");
     }
 

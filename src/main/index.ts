@@ -56,13 +56,3 @@ app.on("window-all-closed", () => {
     app.quit();
   }
 });
-
-declare global {
-  interface Object {
-    equals(a: object, b: object): boolean;
-  }
-}
-
-Object.equals = function (a: object, b: object): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
-};

@@ -5,7 +5,20 @@ import { createExtractorFromFile } from "node-unrar-js";
 import { join, sep, dirname, resolve } from "path";
 import { settings } from "@lib/modules/settings";
 import { guessAssetFilename } from "@lib/utils";
+import { createWriteStream } from "fs";
+import { pipeline } from "stream/promises";
+import { Readable } from "stream";
+import type { ReadableStream as WebReadableStream } from "stream/web";
 import * as fs from "fs";
+
+async function streamToFile(response: Response, filePath: string): Promise<void> {
+  if (!response.body) {
+    throw new Error("Response has no body");
+  }
+
+  const stream = response.body as unknown as WebReadableStream<Uint8Array>;
+  await pipeline(Readable.fromWeb(stream), createWriteStream(filePath));
+}
 
 export default async function downloadFile(
   asset: Asset,
@@ -27,17 +40,15 @@ export default async function downloadFile(
     throw new Error(`Failed to download asset: ${response.status} ${response.statusText}`);
   }
 
-  const buf = Buffer.from(await response.arrayBuffer());
-
   const targetFolder = join(assetsPath, slug);
   await fs.promises.mkdir(targetFolder, { recursive: true });
   const filePath = join(targetFolder, filename);
 
-  await fs.promises.writeFile(filePath, buf);
+  await streamToFile(response, filePath);
 
   if (filename.endsWith(".zip")) {
     try {
-      const zip = await new JSZip().loadAsync(buf);
+      const zip = await new JSZip().loadAsync(await fs.promises.readFile(filePath));
 
       const root = resolve(targetFolder);
 
