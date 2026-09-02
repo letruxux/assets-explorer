@@ -15,16 +15,10 @@ declare global {
   interface String {
     toTitleCase(): string;
   }
-  interface Object {
-    equals(a: object, b: object): boolean;
-  }
 }
 
 String.prototype.toTitleCase = function () {
   return this.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
-};
-Object.equals = function (a: object, b: object): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
 };
 
 useInstalledFiles.getState().init();

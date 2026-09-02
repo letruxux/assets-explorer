@@ -7,7 +7,7 @@ import Fuse from "fuse.js";
 
 const ONE_DAY = makeMs({ days: 1 });
 
-class ItchIoWebsite extends BaseWebsite {
+class KenneyWebsite extends BaseWebsite {
   kenneyAllAssetsCache = new TTLCache<"all", Asset[]>({
     max: 1,
     ttl: ONE_DAY
@@ -57,8 +57,12 @@ class ItchIoWebsite extends BaseWebsite {
     } satisfies AssetPreview;
   }
 
-  private async getAllKenneyAssets(): Promise<Asset[]> {
-    if (this.kenneyAllAssetsCache.has("all")) return this.kenneyAllAssetsCache.get("all")!;
+  private async getAllKenneyAssets({ avoidCache = false }: WebsiteCallConfig = {}): Promise<
+    Asset[]
+  > {
+    if (!avoidCache && this.kenneyAllAssetsCache.has("all")) {
+      return this.kenneyAllAssetsCache.get("all")!;
+    }
     const assets = await kenneyApi
       .fetchAllKenneyAssets()
       .then((assets) => assets.map(this._normalizeAsset));
@@ -70,13 +74,7 @@ class ItchIoWebsite extends BaseWebsite {
     query: string,
     { avoidCache = false }: WebsiteCallConfig = {}
   ): Promise<AssetPreview[]> {
-    let all: Asset[];
-    if (this.kenneyAllAssetsCache.has("all") && !avoidCache) {
-      all = this.kenneyAllAssetsCache.get("all")!;
-    } else {
-      all = (await kenneyApi.fetchAllKenneyAssets()).map(this._normalizeAsset);
-      this.kenneyAllAssetsCache.set("all", all);
-    }
+    const all = await this.getAllKenneyAssets({ avoidCache });
 
     const fuse = new Fuse(all, {
       keys: [
@@ -109,4 +107,4 @@ class ItchIoWebsite extends BaseWebsite {
   }
 }
 
-export const kenneyWebsite = new ItchIoWebsite();
+export const kenneyWebsite = new KenneyWebsite();

@@ -1,4 +1,5 @@
 import { Asset, parseId } from "@shared/types";
+import { deepEquals } from "@shared/utils";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -224,7 +225,7 @@ function SingleAssetDownload({
       asset
         ? (installedFiles ?? []).filter(
             (installedFile) =>
-              installedFile.assetId === asset.id && Object.equals(installedFile.file, dl)
+              installedFile.assetId === asset.id && deepEquals(installedFile.file, dl)
           ).length > 0
         : false,
     [asset, installedFiles, dl]
