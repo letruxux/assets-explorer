@@ -5,6 +5,7 @@ import { getAsset, search } from "@lib/search";
 import { actions } from "./actions";
 import type { ApiType } from "@shared/api";
 import type { InstalledFile } from "@shared/types";
+import { verifySketchfabApiKey } from "./lib/websites-raw-api/sketchfab-api";
 
 const api: ApiType = {
   changeAssetsPath() {
@@ -33,6 +34,15 @@ const api: ApiType = {
 
   async readSettings() {
     return settings.get();
+  },
+
+  async setSetting(key, value) {
+    if (key === "sketchfabApiKey" && value !== "") {
+      const valid = await verifySketchfabApiKey(value);
+      if (!valid) throw new Error("Invalid Sketchfab API key");
+    }
+
+    settings.set(key, value);
   },
 
   searchAssets(query, source) {

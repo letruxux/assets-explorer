@@ -1,6 +1,7 @@
 import useResult from "@renderer/hooks/use-result";
 import { SettingsType } from "@shared/types";
-import { useCallback } from "react";
+import { Loader2, SaveIcon } from "lucide-react";
+import { useCallback, useState } from "react";
 
 function ItchIoTestSetting(): React.JSX.Element {
   const {
@@ -112,12 +113,68 @@ function CheckDeletedFilesSetting(): React.JSX.Element {
   );
 }
 
+function BasicSetting({
+  name,
+  value,
+  setValue,
+  refetch,
+  label
+}: {
+  name: keyof SettingsType;
+  value: SettingsType[keyof SettingsType];
+  setValue: (value: SettingsType[keyof SettingsType]) => void;
+  refetch: () => void;
+  label?: string;
+}): React.JSX.Element {
+  const [initialValue, setInitialValue] = useState(value);
+
+  const setSettingResult = useResult<void>(
+    useCallback(
+      () =>
+        window.api.setSetting(name, value).then(() => {
+          setInitialValue(value);
+          refetch();
+        }),
+      [name, value, refetch]
+    ),
+    { autoFetchFirstTime: false }
+  );
+
+  return (
+    <tr>
+      <th>{label || name}</th>
+      <td className="flex flex-col items-end gap-y-2">
+        <div className="flex items-center justify-end gap-x-2 w-full">
+          <input
+            type="text"
+            className="input flex-1 min-w-0"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder="-"
+          />
+          <button
+            className="btn btn-square"
+            disabled={value === initialValue || setSettingResult.loading}
+            onClick={() => setSettingResult.refetch()}
+          >
+            {setSettingResult.loading ? <Loader2 className="animate-spin" /> : <SaveIcon />}
+          </button>
+        </div>
+        {setSettingResult.error && (
+          <span className="text-error text-left">{setSettingResult.error.message}</span>
+        )}
+      </td>
+    </tr>
+  );
+}
+
 function Settings(): React.JSX.Element {
   const {
     loading,
     data: settings,
     refetch
   } = useResult<SettingsType>(useCallback(() => window.api.readSettings(), []));
+  const [sketchfabApiKey, setSketchfabApiKey] = useState(settings?.sketchfabApiKey ?? "");
 
   return (
     <>
@@ -147,6 +204,13 @@ function Settings(): React.JSX.Element {
                     </button>
                   </td>
                 </tr>
+                <BasicSetting
+                  label="Sketchfab API key"
+                  name="sketchfabApiKey"
+                  value={sketchfabApiKey}
+                  setValue={setSketchfabApiKey}
+                  refetch={refetch}
+                />
                 <ItchIoTestSetting />
                 <CheckDeletedFilesSetting />
               </tbody>

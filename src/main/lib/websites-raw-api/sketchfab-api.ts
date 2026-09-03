@@ -245,3 +245,14 @@ export async function fetchAsset(id: string): Promise<SketchfabAsset> {
 
   return { ..._fixAsset(json), downloads: downloadsJson };
 }
+
+export async function verifySketchfabApiKey(key: string): Promise<boolean> {
+  const resp = await fetch("https://api.sketchfab.com/v3/me/likes", {
+    headers: {
+      accept: "application/json",
+      Authorization: `Token ${key}`
+    }
+  });
+  if (!resp.ok) return false;
+  return true;
+}
