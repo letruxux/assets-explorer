@@ -15,6 +15,7 @@ import {
 import { transformKey } from "./metadata-utils";
 import { AssetMetadata } from "@shared/types";
 import { cn } from "@renderer/lib/utils";
+import toast from "react-hot-toast";
 
 function MetadataValue({ name, value }: { name: string; value: unknown }): React.JSX.Element {
   const icon = {
@@ -30,6 +31,7 @@ function MetadataValue({ name, value }: { name: string; value: unknown }): React
     texturecount: <PaintbrushIcon />,
     tile_size: <PaintbrushIcon />,
     license: <ScaleIcon />,
+    attribution: <ScaleIcon />,
     files: <FolderIcon />,
     content: <InfoIcon />,
     "code license": <ScaleIcon />
@@ -142,6 +144,26 @@ function MetadataValue({ name, value }: { name: string; value: unknown }): React
         <span className="flex gap-x-1 items-center">
           {icon && cloneElement(icon, { className: "size-4" })}
           {Number(value).toLocaleString()}
+        </span>
+      );
+
+    case "attribution":
+      return (
+        <span className="flex gap-x-1 items-center">
+          {icon && cloneElement(icon, { className: "size-4" })}
+          <code
+            className="px-1 bg-base-200 cursor-pointer hover:bg-base-300 transition-colors"
+            onClick={() => {
+              try {
+                navigator.clipboard.writeText(String(value));
+                toast.success("Copied to clipboard");
+              } catch {
+                toast.error("Failed to copy to clipboard");
+              }
+            }}
+          >
+            {String(value)}
+          </code>
         </span>
       );
 

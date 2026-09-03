@@ -48,6 +48,7 @@ class SketchfabWebsite extends BaseWebsite {
         pbrType: asset.pbrType ?? undefined,
         textureCount: asset.textureCount,
         materialCount: asset.materialCount,
+        attribution: `"${asset.name}" (${asset.shortUrl}) by ${asset.user!.username} is licensed under ${asset.license?.fullName} (${asset.license?.url}).`,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         license: (asset.license as any)?.fullName,
         likeCount: asset.likeCount,

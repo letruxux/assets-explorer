@@ -64,7 +64,8 @@ type SketchfabFetchAssetResponse = {
       height?: number;
     }[];
   };
-  license?: unknown;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  license?: any;
   editorUrl?: string;
   soundCount?: number;
   uri?: string;
@@ -149,6 +150,7 @@ type RawSketchfabAsset = SketchfabFetchAssetResponse;
 export type SketchfabAsset = RawSketchfabAsset & {
   _asset_source: "sketchfab";
   id: string;
+  shortUrl: string;
   downloads: {
     [key: string]: {
       size?: number;
@@ -216,24 +218,28 @@ export async function search(q: string): Promise<SketchfabAssetPreview[]> {
 }
 
 export async function fetchAsset(id: string): Promise<SketchfabAsset> {
-  const resp = await fetch(`https://api.sketchfab.com/v3/models/${id}`, {
-    headers: {
-      accept: "application/json"
-    },
-    body: null,
-    method: "GET"
-  });
-  if (!resp.ok) throw await buildResponseNotOkError(resp);
-  const json = (await resp.json()) as SketchfabFetchAssetResponse;
+  const [resp, downloadsResp, shareResp] = await Promise.all([
+    fetch(`https://api.sketchfab.com/v3/models/${id}`, {
+      headers: {
+        accept: "application/json"
+      },
+      body: null,
+      method: "GET"
+    }),
+    fetch(`https://api.sketchfab.com/v3/models/${id}/download`, {
+      headers: {
+        accept: "application/json",
+        Authorization: `Token ${settings.get("sketchfabApiKey")}`
+      },
+      body: null,
+      method: "GET"
+    }),
+    fetch(`https://sketchfab.com/i/models/${id}/sharing`)
+  ]);
 
-  const downloadsResp = await fetch(`https://api.sketchfab.com/v3/models/${id}/download`, {
-    headers: {
-      accept: "application/json",
-      Authorization: `Token ${settings.get("sketchfabApiKey")}`
-    },
-    body: null,
-    method: "GET"
-  });
+  if (!resp.ok) throw await buildResponseNotOkError(resp);
+  const json = _fixAsset(await resp.json()) as SketchfabAsset;
+
   if (!downloadsResp.ok) throw await buildResponseNotOkError(downloadsResp);
   const downloadsJson = (await downloadsResp.json()) as {
     [key: string]: {
@@ -243,9 +249,12 @@ export async function fetchAsset(id: string): Promise<SketchfabAsset> {
     };
   };
 
-  console.dir(json, { depth: 100 });
+  if (!shareResp.ok) throw await buildResponseNotOkError(shareResp);
+  const shareJson = (await shareResp.json()) as {
+    shortUrl: string;
+  };
 
-  return { ..._fixAsset(json), downloads: downloadsJson };
+  return { ...json, downloads: downloadsJson, shortUrl: shareJson.shortUrl };
 }
 
 export async function verifySketchfabApiKey(key: string): Promise<boolean> {
