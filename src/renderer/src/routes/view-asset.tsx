@@ -1,19 +1,64 @@
 import { Asset } from "@shared/types";
 import { deepEquals } from "@shared/utils";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  cloneElement,
+  createElement,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState
+} from "react";
 import { useNavigate, useParams } from "react-router-dom";
-
+import Markdown from "react-markdown";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, A11y } from "swiper/modules";
+import remarkGfm from "remark-gfm";
 
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-import { Check, Download, ExternalLink, Loader2, Lock } from "lucide-react";
+import {
+  Check,
+  CuboidIcon,
+  DiamondIcon,
+  Download,
+  DownloadIcon,
+  ExternalLink,
+  EyeIcon,
+  FolderIcon,
+  HeartIcon,
+  InfoIcon,
+  Loader2,
+  Lock,
+  PaintbrushIcon,
+  ScaleIcon,
+  TriangleIcon,
+  VolumeIcon
+} from "lucide-react";
 import useResult from "@renderer/hooks/use-result";
 import { useInstalledFiles } from "@renderer/store/use-installed-files";
+import { cn } from "@renderer/lib/utils";
 
 function MetadataValue({ name, value }: { name: string; value: unknown }): React.JSX.Element {
+  const icon = {
+    pbrtype: <CuboidIcon />,
+    vertexcount: <TriangleIcon />,
+    facecount: <CuboidIcon />,
+    viewcount: <EyeIcon />,
+    downloadcount: <DownloadIcon />,
+    likecount: <HeartIcon />,
+    soundcount: <VolumeIcon />,
+    animationcount: <CuboidIcon />,
+    materialcount: <DiamondIcon />,
+    texturecount: <PaintbrushIcon />,
+    tile_size: <PaintbrushIcon />,
+    license: <ScaleIcon />,
+    files: <FolderIcon />,
+    content: <InfoIcon />,
+    "code license": <ScaleIcon />
+  }[name.toLowerCase()];
+
   switch (name.toLowerCase()) {
     case "tags":
       return (
@@ -23,6 +68,41 @@ function MetadataValue({ name, value }: { name: string; value: unknown }): React
               {tag.toTitleCase()}
             </span>
           ))}
+        </div>
+      );
+
+    case "categories":
+      return (
+        <div className="flex gap-x-1 overflow-x-auto">
+          {(value as string[]).map((tag) => (
+            <span key={tag} className="badge badge-accent truncate">
+              {tag.toTitleCase()}
+            </span>
+          ))}
+        </div>
+      );
+
+    case "features":
+      return (
+        <div className="flex gap-x-1 overflow-x-auto">
+          {(value as string[]).map((tag) => (
+            <span key={tag} className="badge badge-accent truncate">
+              {tag
+                .toTitleCase()
+                .replace(
+                  /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g,
+                  ""
+                )}
+            </span>
+          ))}
+        </div>
+      );
+
+    case "series":
+    case "category":
+      return (
+        <div className="flex gap-x-1 overflow-x-auto">
+          <span className="badge badge-accent truncate">{(value as string).toTitleCase()}</span>
         </div>
       );
 
@@ -63,22 +143,92 @@ function MetadataValue({ name, value }: { name: string; value: unknown }): React
         </span>
       );
     }
+
+    case "pbrtype":
+      return (
+        <span className="flex gap-x-1 items-center">
+          {icon && cloneElement(icon, { className: "size-4" })}
+          {String(value).toTitleCase()}
+        </span>
+      );
+
     case "files":
-      return <>{Number(value).toLocaleString()}</>;
+    case "viewcount":
+    case "downloadcount":
+    case "likecount":
+    case "soundcount":
+    case "animationcount":
+    case "facecount":
+    case "vertexcount":
+    case "materialcount":
+    case "texturecount":
+      return (
+        <span className="flex gap-x-1 items-center">
+          {icon && cloneElement(icon, { className: "size-4" })}
+          {Number(value).toLocaleString()}
+        </span>
+      );
 
     default:
-      return <>{String(value)}</>;
+      return (
+        <span className="flex gap-x-1 items-center">
+          {icon && cloneElement(icon, { className: "size-4" })}
+          {String(value)}
+        </span>
+      );
+  }
+}
+
+function transformKey(key: string): ReactNode {
+  switch (key.toLowerCase()) {
+    case "facecount":
+      return <>Faces</>;
+    case "vertexcount":
+      return <>Vertices</>;
+    case "viewcount":
+      return <>Views</>;
+    case "downloadcount":
+      return <>Downloads</>;
+    case "likecount":
+      return <>Likes</>;
+    case "soundcount":
+      return <>Sounds</>;
+    case "animationcount":
+      return <>Animations</>;
+    case "pbrtype":
+      return <>PBR Type</>;
+    case "materialcount":
+      return <>Materials</>;
+    case "texturecount":
+      return <>Textures</>;
+    case "category":
+      return <>Category</>;
+    case "tile_size":
+      return <>Tile Size</>;
+
+    default:
+      return key.toTitleCase();
   }
 }
 
 function MetadataRow({ name, value }: { name: string; value: unknown }): React.JSX.Element {
   return (
     <tr key={name}>
-      <th>{name.toTitleCase()}</th>
+      <th>{transformKey(name)}</th>
       <td>
         <MetadataValue name={name} value={value} />
       </td>
     </tr>
+  );
+}
+
+function isEntryEmpty([k, v]: [string, unknown]): boolean {
+  return (
+    v !== null &&
+    v !== undefined &&
+    (typeof v === "string" ? v.length > 0 : true) &&
+    (Array.isArray(v) ? v.length > 0 : true) &&
+    !["author", "ratingvalue", "status", "description"].includes(k.toLowerCase())
   );
 }
 
@@ -127,7 +277,7 @@ function ViewAsset(): React.JSX.Element {
 
     return Object.fromEntries(
       Object.entries(original)
-        .filter(([k, v]) => v && !["Author", "RatingValue", "Status"].includes(k))
+        .filter(isEntryEmpty)
         .map(([k, v]) =>
           k === "RatingCount"
             ? ["Rating", `${original.RatingValue}|${original.RatingCount}`]
@@ -135,6 +285,8 @@ function ViewAsset(): React.JSX.Element {
         )
     );
   }, [asset]);
+
+  const description = useMemo(() => asset?.metadata.description ?? "", [asset]);
 
   if (loading) {
     return <div className="p-4">Loading...</div>;
@@ -172,32 +324,65 @@ function ViewAsset(): React.JSX.Element {
         <span className="text-gray-400 px-2">•</span>from <code>{asset._asset_source}</code>
       </h3>
 
-      <Swiper
-        modules={[Navigation, Pagination, A11y]}
-        navigation
-        pagination={{ clickable: true }}
-        spaceBetween={16}
-        slidesPerView={1}
-        className="w-full max-w-2xl aspect-video"
-      >
-        {asset.images.map((image, index) => (
-          <SwiperSlide key={`${image}-${index}`} className="flex items-center justify-center">
-            <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-black">
-              <img
-                src={image}
-                alt={`${asset.title} preview ${index + 1}`}
-                className="h-full w-full object-contain"
-              />
-            </div>
-          </SwiperSlide>
-        ))}
-      </Swiper>
+      <div className="flex w-full justify-center">
+        <Swiper
+          modules={[Navigation, Pagination, A11y]}
+          navigation
+          pagination={{ clickable: true }}
+          spaceBetween={16}
+          slidesPerView={1}
+          className="aspect-video w-full max-w-2xl"
+        >
+          {asset.images.map((image, index) => (
+            <SwiperSlide key={`${image}-${index}`} className="flex items-center justify-center">
+              <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-lg bg-black">
+                <img
+                  src={image}
+                  alt={`${asset.title} preview ${index + 1}`}
+                  className="h-full w-full object-contain"
+                />
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
 
-      <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 mt-4 w-full">
+      {description && (
+        <div className="prose w-full block max-w-full my-4 text-base-content/70 border border-base-content/5 bg-base-100 p-2 px-4 rounded-box prose-p:my-1 prose-img:my-2 prose-ul:mt-2 prose-li:my-1 prose-ul:mb-4">
+          <details className="w-full">
+            <summary className="cursor-pointer">Show description</summary>
+            <Markdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                a(props) {
+                  return createElement("a", { ...props, target: "_blank" });
+                },
+                img(props) {
+                  return createElement("img", {
+                    ...props,
+                    className: "w-full max-w-xl rounded-box"
+                  });
+                }
+              }}
+            >
+              {description}
+            </Markdown>
+          </details>
+        </div>
+      )}
+
+      <div
+        className={cn(
+          "overflow-x-auto rounded-box border border-base-content/5 bg-base-100 w-full",
+          {
+            "mt-4": !description
+          }
+        )}
+      >
         <table className="table">
           <tbody>
             {Object.entries(metadata)
-              .filter((e) => e[1])
+              .filter((e) => e[1] && e[0] !== "description")
               .map(([key, value]) => (
                 <MetadataRow key={key} name={key} value={value} />
               ))}

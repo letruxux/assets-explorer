@@ -20,15 +20,7 @@ class KenneyWebsite extends BaseWebsite {
       createdAt: asset._extracted.createdAt,
       id: asset.id,
       images: asset.images,
-      metadata: {
-        tags: asset.meta.Tags,
-        category: asset.meta.Category,
-        series: asset.meta.Series,
-        tile_size: asset.meta["Tile size"],
-        files: asset.meta.Files,
-        license: asset.meta.License,
-        features: asset.meta.Features
-      },
+      metadata: asset.meta,
       page_url: parseId(asset.id).pageUrl,
       title: asset.title,
       updatedAt: asset._extracted.updatedAt,
@@ -99,6 +91,7 @@ class KenneyWebsite extends BaseWebsite {
 
   async fetchAsset(id: string, { avoidCache = false }: WebsiteCallConfig = {}): Promise<Asset> {
     const slug = parseId(id).slug;
+    if (!slug) throw new Error("Invalid asset id");
 
     if (avoidCache) return await kenneyApi.fetchKenneyAsset(slug).then(this._normalizeAsset);
 
