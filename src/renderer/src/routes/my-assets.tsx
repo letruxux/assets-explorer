@@ -3,7 +3,7 @@ import useResult from "@renderer/hooks/use-result";
 import { AssetsManifestType } from "@shared/types";
 import { assetToAssetPreview } from "@shared/utils";
 import { FileTextIcon, FolderIcon } from "lucide-react";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 
 function About(): React.JSX.Element {
   const {
@@ -11,6 +11,15 @@ function About(): React.JSX.Element {
     data: assetsManifest,
     error
   } = useResult<AssetsManifestType | null>(useCallback(() => window.api.readAssetsManifest(), []));
+
+  const cachedAssetsWithFiles = useMemo(() => {
+    if (!assetsManifest) return [];
+
+    const { cachedAssets = [], installedFiles = [] } = assetsManifest;
+    const installedFileIds = new Set(installedFiles.map((f) => f.assetId));
+
+    return cachedAssets.filter((asset) => installedFileIds.has(asset.id));
+  }, [assetsManifest]);
 
   return (
     <div className="p-4">
@@ -28,7 +37,7 @@ function About(): React.JSX.Element {
       {loading && <p>Loading...</p>}
       {assetsManifest && (
         <section className="grid grid-cols-[repeat(auto-fit,minmax(min(16rem,100%),1fr))] gap-4 mt-4">
-          {assetsManifest.cachedAssets.map((result) => (
+          {cachedAssetsWithFiles.map((result) => (
             <AssetCard key={result.id} result={assetToAssetPreview(result)} />
           ))}
         </section>
