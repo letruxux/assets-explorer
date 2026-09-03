@@ -97,6 +97,20 @@ function ViewAsset(): React.JSX.Element {
         </span>
       </h1>
 
+      {/* <h2 className="flex items-center gap-x-1 mt-2">
+        <EyeIcon className="size-4" /> {(asset.metadata.viewCount || "").toLocaleString()}
+        <span className="text-gray-400 px-0.5">•</span>
+        <HeartIcon className="size-4" /> {(asset.metadata.likeCount || "").toLocaleString()}
+        <span className="text-gray-400 px-0.5">•</span>
+        <DownloadIcon className="size-4" /> {(asset.metadata.downloadCount || "").toLocaleString()}
+      </h2>
+
+      <h3 className="mb-4 mt-1">
+        by <code>{asset.author}</code>
+        <span className="text-gray-400 px-2">•</span>from{" "}
+        <code>{asset._asset_source.toTitleCase()}</code>
+      </h3> */}
+
       <h3 className="mb-4">
         by <code>{asset.author}</code>
         <span className="text-gray-400 px-2">•</span>from <code>{asset._asset_source}</code>
