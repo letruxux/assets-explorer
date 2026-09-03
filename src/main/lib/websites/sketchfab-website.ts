@@ -3,6 +3,7 @@ import { BaseWebsite, WebsiteCallConfig } from "./base";
 import { TTLCache } from "@isaacs/ttlcache";
 import { formatBytes, makeMs } from "@lib/utils";
 import * as sketchfabApi from "@lib/websites-raw-api/sketchfab-api";
+import { extname } from "path";
 
 const ONE_DAY = makeMs({ days: 1 });
 
@@ -21,16 +22,36 @@ class SketchfabWebsite extends BaseWebsite {
       changelog: [],
       id: asset.id,
       images: (asset.thumbnails?.images ?? []).map((e) => e.url!) ?? [],
-      files: Object.entries(asset.downloads).map(([format, e]) => ({
-        name: `${format.toUpperCase()} format`,
-        direct_url: e.url,
-        date: asset.updatedAt,
-        download_count: asset.downloadCount,
-        file_size: e.size ? formatBytes(e.size) : undefined
-      })),
+      files: Object.entries(asset.downloads).map(([format, e]) => {
+        const filename = new URL(e.url).pathname.split("/").pop()!;
+        const ext = extname(filename);
+        const name = filename.slice(0, -ext.length);
+
+        return {
+          name: `${name}-${format}${ext}`,
+          direct_url: e.url,
+          date: asset.updatedAt,
+          download_count: asset.downloadCount,
+          file_size: e.size ? formatBytes(e.size) : undefined
+        };
+      }),
       metadata: {
         tags: asset.tags?.map((e) => e.name) ?? [],
-        categories: asset.categories?.map((e) => e.name!) ?? []
+        categories: asset.categories?.map((e) => e.name!) ?? [],
+        animationCount: asset.animationCount,
+        faceCount: asset.faceCount,
+        vertexCount: asset.vertexCount,
+        viewCount: asset.viewCount,
+        description: asset.description ?? undefined,
+        downloadCount: asset.downloadCount,
+        price: asset.price ?? undefined,
+        pbrType: asset.pbrType ?? undefined,
+        textureCount: asset.textureCount,
+        materialCount: asset.materialCount,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        license: (asset.license as any)?.fullName,
+        likeCount: asset.likeCount,
+        soundCount: asset.soundCount
       },
       page_url: asset.viewerUrl!,
       title: asset.name!,

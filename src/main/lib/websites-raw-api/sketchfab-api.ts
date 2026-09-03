@@ -64,7 +64,7 @@ type SketchfabFetchAssetResponse = {
       height?: number;
     }[];
   };
-  license?: object;
+  license?: unknown;
   editorUrl?: string;
   soundCount?: number;
   uri?: string;
@@ -242,6 +242,8 @@ export async function fetchAsset(id: string): Promise<SketchfabAsset> {
       expires: number;
     };
   };
+
+  console.dir(json, { depth: 100 });
 
   return { ..._fixAsset(json), downloads: downloadsJson };
 }
