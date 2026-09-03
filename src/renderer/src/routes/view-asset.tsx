@@ -1,4 +1,4 @@
-import { Asset, parseId } from "@shared/types";
+import { Asset } from "@shared/types";
 import { deepEquals } from "@shared/utils";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -156,7 +156,7 @@ function ViewAsset(): React.JSX.Element {
         </button>
         <span className="flex items-center gap-x-2 min-w-0">
           <a
-            href={parseId(asset.id).pageUrl}
+            href={asset.page_url}
             rel="noreferrer"
             target="_blank"
             className="flex items-center gap-x-2 hover:underline min-w-0"
@@ -207,6 +207,8 @@ function ViewAsset(): React.JSX.Element {
 
       <AssetDownloads asset={asset} />
       <Changelog asset={asset} />
+
+      <pre className="w-full p-1">{JSON.stringify(asset, null, 2)}</pre>
     </div>
   );
 }

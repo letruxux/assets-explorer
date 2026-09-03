@@ -1,5 +1,5 @@
 import { AssetPreview, Asset, parseId } from "@shared/types";
-import { BaseWebsite, WebsiteCallConfig } from "./base-website";
+import { BaseWebsite, WebsiteCallConfig } from "./base";
 import { TTLCache } from "@isaacs/ttlcache";
 import { makeMs } from "@lib/utils";
 import * as kenneyApi from "@lib/websites-raw-api/kenney-api";

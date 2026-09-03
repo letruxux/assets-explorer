@@ -1,4 +1,4 @@
-export const ASSET_SOURCES = ["kenney.nl", "itch.io"] as const;
+export const ASSET_SOURCES = ["kenney.nl", "itch.io", "sketchfab", "poly.pizza"] as const;
 export type AssetSource = (typeof ASSET_SOURCES)[number];
 
 export type Scored<T> = T & { __score: number };
@@ -74,6 +74,7 @@ export interface Asset {
 
 export interface SettingsType {
   assetsPath: string;
+  sketchfabApiKey: string;
 }
 
 export interface InstalledFile {
@@ -110,6 +111,15 @@ export function parseId(id: string) {
         slug: extra[1],
         pageUrl: `https://${extra[0]}.itch.io/${extra[1]}`
       };
+    case "sketchfab": {
+      const fullSlug = `${extra[0]}-${extra[1]}`;
+      return {
+        source: "sketchfab",
+        slug: fullSlug,
+        assetId: extra[1],
+        pageUrl: `https://sketchfab.com/3d-models/${fullSlug}`
+      };
+    }
   }
 
   throw new Error("Unknown asset source");
