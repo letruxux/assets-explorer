@@ -1,7 +1,7 @@
 import useResult from "@renderer/hooks/use-result";
 import { SettingsType } from "@shared/types";
 import { Loader2, SaveIcon } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 function ItchIoTestSetting(): React.JSX.Element {
   const {
@@ -118,21 +118,22 @@ function BasicSetting({
   value,
   setValue,
   refetch,
-  label
+  label,
+  actualAppliedSettings
 }: {
   name: keyof SettingsType;
   value: SettingsType[keyof SettingsType];
   setValue: (value: SettingsType[keyof SettingsType]) => void;
   refetch: () => void;
   label?: string;
+  actualAppliedSettings: SettingsType | null;
 }): React.JSX.Element {
-  const [initialValue, setInitialValue] = useState(value);
+  const initialValue = useMemo(() => actualAppliedSettings?.[name], [actualAppliedSettings, name]);
 
   const setSettingResult = useResult<void>(
     useCallback(
       () =>
         window.api.setSetting(name, value).then(() => {
-          setInitialValue(value);
           refetch();
         }),
       [name, value, refetch]
@@ -175,6 +176,11 @@ function Settings(): React.JSX.Element {
     refetch
   } = useResult<SettingsType>(useCallback(() => window.api.readSettings(), []));
   const [sketchfabApiKey, setSketchfabApiKey] = useState(settings?.sketchfabApiKey ?? "");
+  const [polyPizzaApiKey, setPolyPizzaApiKey] = useState(settings?.polyPizzaApiKey ?? "");
+
+  useEffect(() => {
+    if (settings) setSketchfabApiKey(settings.sketchfabApiKey);
+  }, [settings]);
 
   return (
     <>
@@ -210,6 +216,15 @@ function Settings(): React.JSX.Element {
                   value={sketchfabApiKey}
                   setValue={setSketchfabApiKey}
                   refetch={refetch}
+                  actualAppliedSettings={settings}
+                />
+                <BasicSetting
+                  label="poly.pizza API key"
+                  name="polyPizzaApiKey"
+                  value={polyPizzaApiKey}
+                  setValue={setPolyPizzaApiKey}
+                  refetch={refetch}
+                  actualAppliedSettings={settings}
                 />
                 <ItchIoTestSetting />
                 <CheckDeletedFilesSetting />
@@ -217,6 +232,7 @@ function Settings(): React.JSX.Element {
             </table>
           </div>
         )}
+        <pre className="bg-base-200 p-1">{JSON.stringify(settings, null, 2)}</pre>
       </div>
     </>
   );

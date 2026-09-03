@@ -24,7 +24,7 @@ export default async function downloadFile(
   asset: Asset,
   file: Asset["files"][number]
 ): Promise<void> {
-  const { slug } = parseId(asset.id);
+  const { slug, assetId } = parseId(asset.id);
   const { direct_url: url, name: assetName } = file;
 
   const assetsPath = settings.get("assetsPath");
@@ -40,7 +40,7 @@ export default async function downloadFile(
     throw new Error(`Failed to download asset: ${response.status} ${response.statusText}`);
   }
 
-  const targetFolder = join(assetsPath, slug);
+  const targetFolder = join(assetsPath, slug ?? assetId);
   await fs.promises.mkdir(targetFolder, { recursive: true });
   const filePath = join(targetFolder, filename);
 

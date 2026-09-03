@@ -1,42 +1,81 @@
-import { buildResponseNotOkError, USER_AGENT } from "../utils";
-import * as cheerio from "cheerio";
+import { settings } from "../modules/settings";
+import { buildResponseNotOkError } from "../utils";
 
-export interface PolyPizzaAssetPreview {
-  title: string;
-  author: string;
-  image: string;
-  url: string;
+export interface PolypizzaSearchResponse {
+  total: number;
+  results: Array<{
+    ID: string;
+    Title: string;
+    Description?: string;
+    Attribution: string;
+    Thumbnail: string;
+    Download: string;
+    TriCount: number;
+    Creator: {
+      Username: string;
+      DPURL: string;
+    };
+    Category: string;
+    Tags: string[];
+    Licence: string;
+    Animated: boolean;
+  }>;
 }
 
-export async function searchPolyPizza(query: string): Promise<PolyPizzaAssetPreview[]> {
-  const url = `https://poly.pizza/search/${encodeURIComponent(query)}`;
-  const resp = await fetch(url, {
+export type PolyPizzaAssetPreview = NonNullable<PolypizzaSearchResponse["results"][number]>;
+
+export async function searchPolyPizza(
+  query: string,
+  options?: {
+    limit?: number;
+    page?: number;
+    category?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
+    license?: 0 | 1;
+    animated?: 0 | 1;
+  }
+): Promise<PolyPizzaAssetPreview[]> {
+  const params = new URLSearchParams();
+  if (options?.limit) params.append("Limit", String(options.limit));
+  if (options?.page) params.append("Page", String(options.page));
+  if (options?.category !== undefined) params.append("Category", String(options.category));
+  if (options?.license !== undefined) params.append("License", String(options.license));
+  if (options?.animated !== undefined) params.append("Animated", String(options.animated));
+
+  const url = `https://api.poly.pizza/v1.1/search/${encodeURIComponent(query)}?${params.toString()}`;
+  const response = await fetch(url, {
     headers: {
-      "User-Agent": USER_AGENT
-    },
-    method: "GET"
+      "x-auth-token": settings.get("polyPizzaApiKey")
+    }
   });
-  if (!resp.ok) throw await buildResponseNotOkError(resp);
-  const html = await resp.text();
-  const $ = cheerio.load(html);
-  const results = $(".MuiGrid-item .MuiCard-root")
-    .map((i, el) => {
-      const $el = $(el);
-      const price = $el.find(".MuiCardHeader-action").text().trim() || null;
-      if (price) return null;
-      const title = $el.find(".MuiCardHeader-title").text();
-      let url = $el.find("a").attr("href")!;
-      if (url.startsWith("/")) url = "https://poly.pizza" + url;
-      const author = $el.find(".MuiCardHeader-subheader").text();
-      const image = $el.find("img.w-full").attr("src")!;
-      return {
-        title,
-        author,
-        image,
-        url
-      };
-    })
-    .get()
-    .filter((e) => e !== null);
-  return results;
+  if (!response.ok) throw await buildResponseNotOkError(response);
+  const json = await response.json();
+  return json.results;
+}
+
+export interface PolyPizzaAsset {
+  ID: string;
+  Title: string;
+  Description?: string;
+  Attribution: string;
+  Thumbnail: string;
+  Download: string;
+  TriCount: number;
+  Creator: {
+    Username: string;
+    DPURL: string;
+  };
+  Uploaded: string;
+  Category: string;
+  Licence: string;
+  Animated: boolean;
+}
+
+export async function fetchPolyPizzaModel(id: string): Promise<PolyPizzaAsset> {
+  const response = await fetch(`https://api.poly.pizza/v1.1/model/${id}`, {
+    headers: {
+      "x-auth-token": settings.get("polyPizzaApiKey")
+    }
+  });
+  if (!response.ok) throw await buildResponseNotOkError(response);
+  return response.json();
 }

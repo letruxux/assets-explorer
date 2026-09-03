@@ -1,8 +1,7 @@
 import { AssetPreview, Asset, parseId, buildId } from "@shared/types";
 import { BaseWebsite, WebsiteCallConfig } from "./base";
 import { TTLCache } from "@isaacs/ttlcache";
-import { formatBytes, makeMs } from "@lib/utils";
-import * as sketchfabApi from "@lib/websites-raw-api/sketchfab-api";
+import { makeMs } from "@lib/utils";
 import * as polypizzaApi from "@lib/websites-raw-api/poly-pizza-api";
 
 const ONE_DAY = makeMs({ days: 1 });
@@ -14,41 +13,48 @@ class PolyPizzaWebsite extends BaseWebsite {
     ttl: ONE_DAY
   });
 
-  private _normalizeAsset(asset: sketchfabApi.SketchfabAsset): Asset {
+  private _normalizeAsset(asset: polypizzaApi.PolyPizzaAsset): Asset {
+    const id = buildId("poly.pizza", asset.ID);
     return {
-      _asset_source: asset._asset_source,
-      author: asset.user!.username!,
-      createdAt: asset.createdAt!,
+      _asset_source: "poly.pizza",
+      author: asset.Creator.Username,
+      createdAt: asset.Uploaded,
       changelog: [],
-      id: asset.id,
-      images: (asset.thumbnails?.images ?? []).map((e) => e.url!) ?? [],
-      files: Object.entries(asset.downloads).map(([format, e]) => ({
-        name: `${format.toUpperCase()} format`,
-        direct_url: e.url,
-        date: asset.updatedAt,
-        download_count: asset.downloadCount,
-        file_size: e.size ? formatBytes(e.size) : undefined
-      })),
+      id,
+      images: [asset.Thumbnail],
+      files: [
+        {
+          name: "Download",
+          direct_url: asset.Download,
+          date: asset.Uploaded,
+          download_count: asset.TriCount,
+          file_size: undefined
+        }
+      ],
       metadata: {
-        tags: asset.tags?.map((e) => e.name) ?? [],
-        categories: asset.categories?.map((e) => e.name!) ?? []
+        TriCount: asset.TriCount,
+        License: asset.Licence,
+        Animated: asset.Animated,
+        Category: asset.Category,
+        Attribution: asset.Attribution,
+        description: asset.Description
       },
-      page_url: asset.viewerUrl!,
-      title: asset.name!,
-      updatedAt: asset.updatedAt!
+      page_url: "https://poly.pizza/m/" + asset.ID,
+      title: asset.Title,
+      updatedAt: asset.Uploaded
     } satisfies Asset;
   }
 
   private _normalizeAssetPreview(asset: polypizzaApi.PolyPizzaAssetPreview): AssetPreview {
-    const id = buildId("poly.pizza", asset.url.split("/").pop()!);
+    const id = buildId("poly.pizza", asset.ID);
     return {
       _asset_source: "poly.pizza",
       id,
-      images: asset.image ? [asset.image] : [],
-      page_url: asset.url,
-      title: asset.title,
-      author: asset.author,
-      tags: []
+      images: [asset.Thumbnail],
+      page_url: "https://poly.pizza/m/" + asset.ID,
+      title: asset.Title,
+      author: asset.Creator.Username,
+      tags: asset.Tags
     } satisfies AssetPreview;
   }
 
@@ -73,10 +79,10 @@ class PolyPizzaWebsite extends BaseWebsite {
     const uid = parseId(id).assetId;
     if (!uid) throw new Error("Invalid asset id");
 
-    if (avoidCache) return await sketchfabApi.fetchAsset(uid).then(this._normalizeAsset);
+    if (avoidCache) return await polypizzaApi.fetchPolyPizzaModel(uid).then(this._normalizeAsset);
 
     if (this.assetCache.has(uid)) return this.assetCache.get(uid)!;
-    const asset = await sketchfabApi.fetchAsset(uid).then(this._normalizeAsset);
+    const asset = await polypizzaApi.fetchPolyPizzaModel(uid).then(this._normalizeAsset);
     this.assetCache.set(uid, asset);
     return asset;
   }

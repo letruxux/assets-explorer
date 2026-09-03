@@ -15,7 +15,7 @@ export async function search(query: string, source: AssetSource): Promise<AssetP
     case "poly.pizza":
       return await polyPizzaWebsite.search(query);
     default:
-      throw new Error("Unknown asset source");
+      throw new Error("Unknown asset source:", source);
   }
 }
 
@@ -28,7 +28,9 @@ export async function getAsset(id: string): Promise<Asset> {
       return await itchIoWebsite.fetchAsset(id);
     case "sketchfab":
       return await sketchfabWebsite.fetchAsset(id);
+    case "poly.pizza":
+      return await polyPizzaWebsite.fetchAsset(id);
     default:
-      throw new Error("Unknown asset source");
+      throw new Error("Unknown asset source: " + source);
   }
 }

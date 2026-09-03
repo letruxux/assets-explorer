@@ -75,6 +75,7 @@ export interface Asset {
 export interface SettingsType {
   assetsPath: string;
   sketchfabApiKey: string;
+  polyPizzaApiKey: string;
 }
 
 export interface InstalledFile {
@@ -118,6 +119,14 @@ export function parseId(id: string) {
         slug: fullSlug,
         assetId: extra[1],
         pageUrl: `https://sketchfab.com/3d-models/${fullSlug}`
+      };
+    }
+    case "poly.pizza": {
+      const id = extra[0];
+      return {
+        source: "poly.pizza",
+        assetId: extra[0],
+        pageUrl: `https://poly.pizza/m/${id}`
       };
     }
   }

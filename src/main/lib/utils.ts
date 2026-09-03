@@ -79,6 +79,7 @@ export function guessAssetFilename(
       throw new Error("Could not determine Kenney asset filename");
     }
 
+    default:
     case "itch.io": {
       const contentDispositionFilename = getFilenameFromContentDisposition();
 
@@ -98,9 +99,6 @@ export function guessAssetFilename(
 
       throw new Error("Could not determine Itch.io asset filename");
     }
-
-    default:
-      throw new Error(`Unknown asset source: ${source}`);
   }
 }
 
