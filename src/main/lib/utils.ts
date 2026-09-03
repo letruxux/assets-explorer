@@ -11,6 +11,10 @@ export function formatBytes(bytes: number): string {
   return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
 }
 
+export function makeFilenameSafe(filename: string): string {
+  return filename.replace(/[/\\?%*:|"<>]/g, "-");
+}
+
 export function makeMs({
   days,
   hours,

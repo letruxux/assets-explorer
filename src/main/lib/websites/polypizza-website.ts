@@ -1,7 +1,7 @@
 import { AssetPreview, Asset, parseId, buildId } from "@shared/types";
 import { BaseWebsite, WebsiteCallConfig } from "./base";
 import { TTLCache } from "@isaacs/ttlcache";
-import { makeMs } from "@lib/utils";
+import { makeFilenameSafe, makeMs } from "@lib/utils";
 import * as polypizzaApi from "@lib/websites-raw-api/poly-pizza-api";
 
 const ONE_DAY = makeMs({ days: 1 });
@@ -15,6 +15,7 @@ class PolyPizzaWebsite extends BaseWebsite {
 
   private _normalizeAsset(asset: polypizzaApi.PolyPizzaAsset): Asset {
     const id = buildId("poly.pizza", asset.ID);
+    const dlExtension = asset.Download.split(".").pop()!;
     return {
       _asset_source: "poly.pizza",
       author: asset.Creator.Username,
@@ -24,11 +25,9 @@ class PolyPizzaWebsite extends BaseWebsite {
       images: [asset.Thumbnail],
       files: [
         {
-          name: "Download",
+          name: makeFilenameSafe(asset.Title) + "." + dlExtension,
           direct_url: asset.Download,
-          date: asset.Uploaded,
-          download_count: asset.TriCount,
-          file_size: undefined
+          date: asset.Uploaded
         }
       ],
       metadata: {

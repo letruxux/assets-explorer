@@ -179,7 +179,10 @@ function Settings(): React.JSX.Element {
   const [polyPizzaApiKey, setPolyPizzaApiKey] = useState(settings?.polyPizzaApiKey ?? "");
 
   useEffect(() => {
-    if (settings) setSketchfabApiKey(settings.sketchfabApiKey);
+    if (settings) {
+      setPolyPizzaApiKey(settings.polyPizzaApiKey);
+      setSketchfabApiKey(settings.sketchfabApiKey);
+    }
   }, [settings]);
 
   return (

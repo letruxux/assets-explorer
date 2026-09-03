@@ -56,6 +56,11 @@ function Home(): React.JSX.Element {
             className="input flex-1 min-w-0 w-full py-3 sm:py-0"
             placeholder="Search"
             value={query}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                searchCallback();
+              }
+            }}
             onChange={(e) => setQuery(e.target.value)}
           />
 
