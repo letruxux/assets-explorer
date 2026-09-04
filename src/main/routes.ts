@@ -1,4 +1,4 @@
-import { ipcMain } from "electron";
+import { ipcMain, shell } from "electron";
 import { settings } from "@modules/settings";
 import { getAssetsManifest } from "@modules/assets-manifest";
 import { getAsset, getFeatured, search } from "@lib/search";
@@ -38,7 +38,7 @@ const api: ApiType = {
 
   async setSetting(key, value) {
     if (key === "sketchfabApiKey" && value !== "") {
-      const valid = await verifySketchfabApiKey(value);
+      const valid = await verifySketchfabApiKey(value as string);
       if (!valid) throw new Error("Invalid Sketchfab API key");
     }
 
@@ -67,6 +67,10 @@ const api: ApiType = {
 
   deleteStaleDatabaseEntries(files: InstalledFile[]) {
     return actions.deleteStaleDbEntries(files);
+  },
+
+  async open(path) {
+    shell.openPath(path);
   }
 } satisfies ApiType;
 

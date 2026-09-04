@@ -26,6 +26,7 @@ export type ApiType = {
   setSetting(key: keyof SettingsType, value: SettingsType[keyof SettingsType]): Promise<void>;
   deleteStaleDatabaseEntries(files: InstalledFile[]): Promise<number>;
   getFeatured(): Promise<AssetPreview[]>;
+  open(path: string): Promise<void>;
 };
 
 export const API_CHANNELS = [
@@ -42,7 +43,8 @@ export const API_CHANNELS = [
   "checkForDeletedFiles",
   "deleteStaleDatabaseEntries",
   "setSetting",
-  "getFeatured"
+  "getFeatured",
+  "open"
 ] as const satisfies Array<keyof ApiType>;
 
 type AssertAllApiChannelsIncluded =

@@ -1,8 +1,9 @@
 import { AssetCard } from "@renderer/components/asset-card";
 import useResult from "@renderer/hooks/use-result";
+import { useSettings } from "@renderer/store/use-settings";
 import { AssetsManifestType } from "@shared/types";
 import { assetToAssetPreview } from "@shared/utils";
-import { FileTextIcon, FolderIcon } from "lucide-react";
+import { FolderIcon } from "lucide-react";
 import { useCallback, useMemo } from "react";
 
 function About(): React.JSX.Element {
@@ -11,6 +12,7 @@ function About(): React.JSX.Element {
     data: assetsManifest,
     error
   } = useResult<AssetsManifestType | null>(useCallback(() => window.api.readAssetsManifest(), []));
+  const { settings } = useSettings();
 
   const cachedAssetsWithFiles = useMemo(() => {
     if (!assetsManifest) return [];
@@ -26,10 +28,13 @@ function About(): React.JSX.Element {
       <span className="w-full flex">
         <h1 className="text-2xl font-bold">My Assets</h1>
         <div className="grow" />
-        <button className="btn btn-ghost btn-square mr-2" onClick={() => {}}>
-          <FileTextIcon />
-        </button>
-        <button className="btn btn-ghost btn-square" onClick={() => {}}>
+        <button
+          disabled={!settings.assetsPath}
+          className="btn btn-ghost btn-square"
+          onClick={() => {
+            window.api.open(settings.assetsPath!);
+          }}
+        >
           <FolderIcon />
         </button>
       </span>
