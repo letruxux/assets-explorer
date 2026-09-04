@@ -1,34 +1,16 @@
-# assets-explorer
+# Assets Explorer
 
-An Electron application with React and TypeScript
+App to manage and download assets from various sources.
 
-## Recommended IDE Setup
+## Features
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+- Search for assets
+- Download assets
+- Manage downloaded assets
 
-## Project Setup
+## Sources
 
-### Install
-
-```bash
-$ npm install
-```
-
-### Development
-
-```bash
-$ npm run dev
-```
-
-### Build
-
-```bash
-# For windows
-$ npm run build:win
-
-# For macOS
-$ npm run build:mac
-
-# For Linux
-$ npm run build:linux
-```
+- [itch.io](https://itch.io)
+- [sketchfab](https://sketchfab.com)
+- [poly.pizza](https://poly.pizza)
+- [kenney.nl](https://kenney.nl)
