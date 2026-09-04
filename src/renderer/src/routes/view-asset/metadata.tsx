@@ -152,7 +152,7 @@ function MetadataValue({ name, value }: { name: string; value: unknown }): React
         <span className="flex gap-x-1 items-center">
           {icon && cloneElement(icon, { className: "size-4" })}
           <code
-            className="px-1 bg-base-200 cursor-pointer hover:bg-base-300 transition-colors"
+            className="px-1 bg-base-200 cursor-pointer hover:bg-base-300 transition-colors truncate"
             onClick={() => {
               try {
                 navigator.clipboard.writeText(String(value));
