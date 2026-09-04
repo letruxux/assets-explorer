@@ -52,6 +52,22 @@ export async function searchPolyPizza(
   return json.results;
 }
 
+export async function getFeatured(): Promise<PolyPizzaAssetPreview[]> {
+  const params = new URLSearchParams();
+  params.append("Limit", "5");
+  params.append("License", "1");
+
+  const url = `https://api.poly.pizza/v1.1/search?${params.toString()}`;
+  const response = await fetch(url, {
+    headers: {
+      "x-auth-token": settings.get("polyPizzaApiKey")
+    }
+  });
+  if (!response.ok) throw await buildResponseNotOkError(response);
+  const json = await response.json();
+  return json.results;
+}
+
 export interface PolyPizzaAsset {
   ID: string;
   Title: string;

@@ -85,6 +85,14 @@ class PolyPizzaWebsite extends BaseWebsite {
     this.assetCache.set(uid, asset);
     return asset;
   }
+
+  async fetchFeatured(): Promise<AssetPreview[]> {
+    const results = await polypizzaApi
+      .getFeatured()
+      .then((e) => e.map(this._normalizeAssetPreview))
+      .then((e) => e.slice(0, 5));
+    return results;
+  }
 }
 
 export const polyPizzaWebsite = new PolyPizzaWebsite();

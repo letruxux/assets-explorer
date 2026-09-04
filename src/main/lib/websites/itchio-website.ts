@@ -12,6 +12,10 @@ class ItchIoWebsite extends BaseWebsite {
     max: 50,
     ttl: ONE_DAY
   });
+  itchIoFeaturedCache = new TTLCache<string, AssetPreview[]>({
+    max: 1,
+    ttl: ONE_DAY
+  });
 
   private _normalizeAsset(asset: itchIoApi.ItchIoAsset): Asset {
     return {
@@ -70,6 +74,16 @@ class ItchIoWebsite extends BaseWebsite {
     const asset = await itchIoApi.fetchItchIoAsset(url).then(this._normalizeAsset);
     this.itchIoAssetCache.set(url, asset);
     return asset;
+  }
+
+  async fetchFeatured(): Promise<AssetPreview[]> {
+    if (this.itchIoFeaturedCache.has("all")) return this.itchIoFeaturedCache.get("all")!;
+    const results = await itchIoApi
+      .fetchFeatured()
+      .then((e) => e.map(this._normalizeAssetPreview))
+      .then((e) => e.slice(0, 5));
+    this.itchIoFeaturedCache.set("all", results);
+    return results;
   }
 }
 

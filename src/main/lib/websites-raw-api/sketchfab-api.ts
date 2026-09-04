@@ -217,6 +217,23 @@ export async function search(q: string): Promise<SketchfabAssetPreview[]> {
   return results.map(_fixAssetPreview);
 }
 
+export async function getFeatured(): Promise<SketchfabAssetPreview[]> {
+  const resp = await fetch(
+    `https://api.sketchfab.com/v3/models?sort_by=-createdAt&staffpicked=true&archives_flavours=false`,
+    {
+      headers: {
+        accept: "application/json"
+      },
+      body: null,
+      method: "GET"
+    }
+  );
+  if (!resp.ok) throw await buildResponseNotOkError(resp);
+  const json = (await resp.json()) as SketchfabSearchResponse;
+  const results = json.results ?? [];
+  return results.map(_fixAssetPreview);
+}
+
 export async function fetchAsset(id: string): Promise<SketchfabAsset> {
   const [resp, downloadsResp, shareResp] = await Promise.all([
     fetch(`https://api.sketchfab.com/v3/models/${id}`, {

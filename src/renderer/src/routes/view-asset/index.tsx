@@ -57,13 +57,13 @@ function ViewAsset(): React.JSX.Element {
         .filter(isEntryEmpty)
         .map(([k, v]) =>
           k === "RatingCount"
-            ? ["Rating", `${original.RatingValue}|${original.RatingCount}`]
-            : [k, v]
+            ? ["rating", `${original.RatingValue}|${original.RatingCount}`]
+            : [k.toLowerCase(), v]
         )
     );
   }, [asset?.metadata]);
 
-  const description = useMemo(() => asset?.metadata.description ?? "", [asset]);
+  const description = useMemo(() => (metadata.description as string | undefined) ?? "", [metadata]);
 
   if (loading) {
     return <div className="p-4">Loading...</div>;
@@ -125,6 +125,7 @@ function ViewAsset(): React.JSX.Element {
       <Changelog asset={asset} />
 
       <pre className="w-full p-1">{JSON.stringify(asset, null, 2)}</pre>
+      <pre className="w-full p-1 mt-4">{JSON.stringify(metadata, null, 2)}</pre>
     </div>
   );
 }

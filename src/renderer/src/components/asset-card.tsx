@@ -4,6 +4,7 @@ import { useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Folder } from "lucide-react";
 import { useInstalledFiles } from "@renderer/store/use-installed-files";
+import { relativeDate } from "@shared/utils";
 
 export function AssetCard({
   result,
@@ -65,7 +66,12 @@ export function AssetCard({
         <div className="card-body">
           <div className="mb-1">
             <h2 className="card-title">{result.title}</h2>
-            <h4 className="text-gray-400">{result.author}</h4>
+            <h3 className="text-gray-400">{result.author}</h3>
+            {result._lastUpdated && (
+              <h4 className="text-gray-400">
+                Updated <span className="font-bold">{relativeDate(result._lastUpdated)}</span>
+              </h4>
+            )}
           </div>
 
           {sortedTags.length > 0 && (

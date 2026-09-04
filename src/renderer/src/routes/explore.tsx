@@ -2,6 +2,7 @@ import { ASSET_SOURCES, AssetSource } from "@shared/types";
 import { useCallback, useEffect } from "react";
 import { AssetCard } from "@renderer/components/asset-card";
 import { useSearchStore } from "@renderer/store/search";
+import useResult from "@renderer/hooks/use-result";
 
 function Home(): React.JSX.Element {
   const {
@@ -19,6 +20,13 @@ function Home(): React.JSX.Element {
     hidePaidAssets,
     setHidePaidAssets
   } = useSearchStore();
+
+  const { data: featured } = useResult(
+    useCallback(async () => {
+      const assets = await window.api.getFeatured();
+      return assets;
+    }, [])
+  );
 
   useEffect(() => {
     window.scrollTo(useSearchStore.getState().scroll.x, useSearchStore.getState().scroll.y);
@@ -97,13 +105,30 @@ function Home(): React.JSX.Element {
 
       {error && <p className="px-4 text-error">{error.message}</p>}
 
-      <section className="grid grid-cols-[repeat(auto-fit,minmax(min(16rem,100%),1fr))] gap-4 p-4">
-        {results
-          .filter((e) => !hidePaidAssets || e.price === undefined)
-          .map((result) => (
-            <AssetCard key={result.id} result={result} query={query} />
-          ))}
-      </section>
+      {results.length > 0 && (
+        <section className="grid grid-cols-[repeat(auto-fit,minmax(min(16rem,100%),1fr))] gap-4 p-4">
+          {results
+            .filter((e) => !hidePaidAssets || e.price === undefined)
+            .map((result) => (
+              <AssetCard key={result.id} result={result} query={query} />
+            ))}
+        </section>
+      )}
+      {results.length === 0 && query === "" && (
+        <div>
+          <div className="h-32 flex items-center justify-center w-full text-base-content/70">
+            Start searching!
+          </div>
+          <h2 className="px-4 font-bold text-xl">Featured</h2>
+          <section className="grid grid-cols-[repeat(auto-fit,minmax(min(16rem,100%),1fr))] gap-4 p-4">
+            {(featured ?? [])
+              .filter((e) => !hidePaidAssets || e.price === undefined)
+              .map((result) => (
+                <AssetCard key={result.id} result={result} query={query} />
+              ))}
+          </section>
+        </div>
+      )}
     </div>
   );
 }

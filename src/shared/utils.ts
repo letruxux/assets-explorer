@@ -1,4 +1,7 @@
 import { Asset, AssetPreview } from "./types";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(relativeTime);
 
 export function deepEquals(a: unknown, b: unknown): boolean {
   if (a === b) return true;
@@ -31,7 +34,15 @@ export function assetToAssetPreview(asset: Asset): AssetPreview {
     id: asset.id,
     images: asset.images,
     page_url: asset.page_url,
-    tags: asset.metadata.tags ?? [],
-    title: asset.title
+    tags:
+      (asset.metadata.tags as string[] | undefined) ??
+      (asset.metadata.Tags as string[] | undefined) ??
+      [],
+    title: asset.title,
+    _lastUpdated: asset.updatedAt
   } satisfies AssetPreview;
+}
+
+export function relativeDate(date: string | Date): string {
+  return dayjs(date).fromNow();
 }

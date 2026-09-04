@@ -15,6 +15,9 @@ export interface AssetPreview {
   id: string;
   tags: string[];
   price?: string;
+
+  /** used just in featured */
+  _lastUpdated?: string;
 }
 export interface ChangelogEntry {
   name: string;
@@ -31,8 +34,8 @@ export interface AssetMetadata {
   license?: string;
   features?: string[];
 
-  RatingValue?: number;
-  RatingCount?: number;
+  ratingvalue?: number;
+  ratingcount?: number;
   description?: string;
 
   [key: string]: unknown;

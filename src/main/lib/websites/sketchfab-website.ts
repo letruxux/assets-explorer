@@ -68,7 +68,8 @@ class SketchfabWebsite extends BaseWebsite {
       page_url: asset.viewerUrl!,
       tags: (asset.tags ?? []).map((e) => e.name),
       title: asset.name!,
-      author: asset.user?.username
+      author: asset.user?.username,
+      _lastUpdated: asset.publishedAt
     } satisfies AssetPreview;
   }
 
@@ -97,6 +98,14 @@ class SketchfabWebsite extends BaseWebsite {
     const asset = await sketchfabApi.fetchAsset(uid).then(this._normalizeAsset);
     this.assetCache.set(uid, asset);
     return asset;
+  }
+
+  async fetchFeatured(): Promise<AssetPreview[]> {
+    const results = await sketchfabApi
+      .getFeatured()
+      .then((e) => e.map(this._normalizeAssetPreview))
+      .then((e) => e.slice(0, 5));
+    return results;
   }
 }
 

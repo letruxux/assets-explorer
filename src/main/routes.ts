@@ -1,7 +1,7 @@
 import { ipcMain } from "electron";
 import { settings } from "@modules/settings";
 import { getAssetsManifest } from "@modules/assets-manifest";
-import { getAsset, search } from "@lib/search";
+import { getAsset, getFeatured, search } from "@lib/search";
 import { actions } from "./actions";
 import type { ApiType } from "@shared/api";
 import type { InstalledFile } from "@shared/types";
@@ -43,6 +43,10 @@ const api: ApiType = {
     }
 
     settings.set(key, value);
+  },
+
+  getFeatured() {
+    return getFeatured();
   },
 
   searchAssets(query, source) {

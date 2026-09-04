@@ -19,17 +19,14 @@ export function Changelog({ asset }: { asset: Asset }): React.JSX.Element {
           <tbody>
             {asset.changelog
               .sort((a, b) => b.date.localeCompare(a.date))
-              .map(
-                (c) =>
-                  c.description && (
-                    <tr key={c.name} className="group">
-                      <td>
-                        <span className="badge group-first:badge-primary">{c.name}</span>
-                      </td>
-                      <td>{c.description}</td>
-                    </tr>
-                  )
-              )}
+              .map((c) => (
+                <tr key={c.name} className="group">
+                  <td>
+                    <span className="badge group-first:badge-primary">{c.name}</span>
+                  </td>
+                  <td>{c.description}</td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>

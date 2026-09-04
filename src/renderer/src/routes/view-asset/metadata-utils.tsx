@@ -38,6 +38,6 @@ export function isEntryEmpty([k, v]: [string, unknown]): boolean {
     v !== undefined &&
     (typeof v === "string" ? v.length > 0 : true) &&
     (Array.isArray(v) ? v.length > 0 : true) &&
-    !["author", "ratingvalue", "status", "description"].includes(k.toLowerCase())
+    !["author", "ratingvalue", "status"].includes(k.toLowerCase())
   );
 }

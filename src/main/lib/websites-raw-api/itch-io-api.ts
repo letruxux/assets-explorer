@@ -2,6 +2,7 @@ import { buildId, parseId } from "@shared/types";
 import * as cheerio from "cheerio";
 import { buildResponseNotOkError, USER_AGENT } from "@lib/utils";
 import { fetchWithElectronBrowser } from "@lib/cf-solve";
+import { NodeHtmlMarkdown } from "node-html-markdown";
 
 export type ItchIoAssetPreview = {
   title: string;
@@ -22,7 +23,6 @@ export type ItchIoAsset = {
   id: string;
   slug: string; /* same as id */
   _asset_source: "itch.io";
-
   downloads: {
     date: string;
     name: string;
@@ -67,11 +67,14 @@ function weirdDateParser(date: string): string {
   return new Date(date.replace(" @ ", " ")).toISOString();
 }
 
-export async function searchOnItchIo(query: string): Promise<ItchIoAssetPreview[]> {
-  const url = buildItchIoSearchUrl(query);
-  const html = await fetchWithElectronBrowser(url);
+export async function fetchFeatured(): Promise<ItchIoAssetPreview[]> {
+  const html = await fetchWithElectronBrowser("https://itch.io/game-assets/new-and-popular/free");
+  return _parsePage(html);
+}
+
+function _parsePage(html: string): ItchIoAssetPreview[] {
   const $ = cheerio.load(html);
-  const results = $(".results_column div.game_cell");
+  const results = $("div.game_cell");
   return results
     .map((_, el) => {
       const $el = $(el);
@@ -84,6 +87,7 @@ export async function searchOnItchIo(query: string): Promise<ItchIoAssetPreview[
       const image = $el.find("img.lazy_loaded").attr("data-lazy_src")?.endsWith(".gif")
         ? $el.find("div.gif_overlay").attr("data-gif")
         : $el.find("img.lazy_loaded").attr("data-lazy_src");
+
       return {
         title,
         author,
@@ -98,11 +102,18 @@ export async function searchOnItchIo(query: string): Promise<ItchIoAssetPreview[
     .get();
 }
 
+export async function searchOnItchIo(query: string): Promise<ItchIoAssetPreview[]> {
+  const url = buildItchIoSearchUrl(query);
+  const html = await fetchWithElectronBrowser(url);
+  return _parsePage(html);
+}
+
 export async function fetchDownloadUrls(
   url: string,
   $: cheerio.CheerioAPI,
   downloadsPreview: { name: string; free: boolean }[]
 ): Promise<ItchIoAsset["downloads"]> {
+  return [];
   const csrfToken = $('meta[name="csrf_token"]').attr("value");
   if (!csrfToken) throw new Error("No csrf token found");
 
@@ -180,9 +191,13 @@ export async function fetchItchIoAsset(url: string): Promise<ItchIoAsset> {
 
   const moreInfoTableRows = $(".info_panel_wrapper table tbody tr");
   const _raw_meta: Record<string, string> = {};
+
+  const descriptionHtml = $(".columns .left_col .formatted_description").html() ?? "";
+  const description = NodeHtmlMarkdown.translate(descriptionHtml);
   /// @ts-ignore mustard
   const meta: ItchIoAsset["meta"] = {
-    Description: $('meta[name="description"]').attr("content")
+    //Description: $('meta[name="description"]').attr("content")
+    Description: description
   };
   /// @ts-ignore mustard
   const _extracted: ItchIoAsset["_extracted"] = {};
@@ -244,6 +259,7 @@ export async function fetchItchIoAsset(url: string): Promise<ItchIoAsset> {
 
   const downloads = await fetchDownloadUrls(url, $, downloadsPreview);
   const id = itchIoUrlToId(url);
+
   return {
     title: $("title").text(),
     author: parseId(id).author!,

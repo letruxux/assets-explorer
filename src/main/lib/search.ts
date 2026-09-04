@@ -4,33 +4,30 @@ import { itchIoWebsite } from "./websites/itchio-website";
 import { sketchfabWebsite } from "./websites/sketchfab-website";
 import { polyPizzaWebsite } from "./websites/polypizza-website";
 
+const ALL_WEBSITES = {
+  "itch.io": itchIoWebsite,
+  "kenney.nl": kenneyWebsite,
+  sketchfab: sketchfabWebsite,
+  "poly.pizza": polyPizzaWebsite
+} as const;
+
 export async function search(query: string, source: AssetSource): Promise<AssetPreview[]> {
-  switch (source) {
-    case "kenney.nl":
-      return await kenneyWebsite.search(query);
-    case "itch.io":
-      return await itchIoWebsite.search(query);
-    case "sketchfab":
-      return await sketchfabWebsite.search(query);
-    case "poly.pizza":
-      return await polyPizzaWebsite.search(query);
-    default:
-      throw new Error("Unknown asset source:", source);
-  }
+  const website = ALL_WEBSITES[source];
+  if (!website) throw new Error("Unknown asset source: " + source);
+  return website.search(query);
 }
 
 export async function getAsset(id: string): Promise<Asset> {
   const { source } = parseId(id);
-  switch (source) {
-    case "kenney.nl":
-      return await kenneyWebsite.fetchAsset(id);
-    case "itch.io":
-      return await itchIoWebsite.fetchAsset(id);
-    case "sketchfab":
-      return await sketchfabWebsite.fetchAsset(id);
-    case "poly.pizza":
-      return await polyPizzaWebsite.fetchAsset(id);
-    default:
-      throw new Error("Unknown asset source: " + source);
-  }
+  const website = ALL_WEBSITES[source];
+  if (!website) throw new Error("Unknown asset source: " + source);
+  return website.fetchAsset(id);
+}
+
+export async function getFeatured(): Promise<AssetPreview[]> {
+  const websites = Object.values(ALL_WEBSITES);
+  const results = await Promise.all(
+    websites.filter((website) => website.fetchFeatured).map((website) => website.fetchFeatured())
+  );
+  return results.flat();
 }
