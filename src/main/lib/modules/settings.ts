@@ -1,4 +1,5 @@
 import { SettingsType } from "@shared/types";
+import { BrowserWindow } from "electron";
 import electronSettings from "electron-settings";
 
 class SettingsManager {
@@ -15,6 +16,7 @@ class SettingsManager {
 
   public set(key: keyof SettingsType, value: SettingsType[keyof SettingsType]): void {
     electronSettings.setSync(key, value);
+    BrowserWindow.getAllWindows().forEach((w) => w.webContents.send("settings-updated"));
   }
 }
 

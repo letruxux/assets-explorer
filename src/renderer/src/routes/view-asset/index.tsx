@@ -8,6 +8,7 @@ import { AssetDownloads } from "./downloads";
 import Description from "./description";
 import { ExternalLink } from "lucide-react";
 import { Images } from "./images";
+import { useSettings } from "@renderer/store/use-settings";
 
 function ViewAsset(): React.JSX.Element {
   const { id } = useParams();
@@ -64,6 +65,8 @@ function ViewAsset(): React.JSX.Element {
   }, [asset?.metadata]);
 
   const description = useMemo(() => (metadata.description as string | undefined) ?? "", [metadata]);
+
+  const { settings } = useSettings();
 
   if (loading) {
     return <div className="p-4">Loading...</div>;
@@ -124,8 +127,12 @@ function ViewAsset(): React.JSX.Element {
       <AssetDownloads asset={asset} />
       <Changelog asset={asset} />
 
-      <pre className="w-full p-1">{JSON.stringify(asset, null, 2)}</pre>
-      <pre className="w-full p-1 mt-4">{JSON.stringify(metadata, null, 2)}</pre>
+      {settings.showDebugInfo && (
+        <>
+          <pre className="w-full p-1">{JSON.stringify(asset, null, 2)}</pre>
+          <pre className="w-full p-1 mt-4">{JSON.stringify(metadata, null, 2)}</pre>
+        </>
+      )}
     </div>
   );
 }

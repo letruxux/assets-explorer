@@ -1,5 +1,6 @@
 import useResult from "@renderer/hooks/use-result";
-import { SettingsType } from "@shared/types";
+import { useSettings } from "@renderer/store/use-settings";
+import { DEFAULT_SETTINGS, SettingsType } from "@shared/types";
 import { Loader2, SaveIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -117,27 +118,19 @@ function BasicSetting({
   name,
   value,
   setValue,
-  refetch,
   label,
   actualAppliedSettings
 }: {
   name: keyof SettingsType;
   value: SettingsType[keyof SettingsType];
   setValue: (value: SettingsType[keyof SettingsType]) => void;
-  refetch: () => void;
   label?: string;
   actualAppliedSettings: SettingsType | null;
 }): React.JSX.Element {
   const initialValue = useMemo(() => actualAppliedSettings?.[name], [actualAppliedSettings, name]);
 
   const setSettingResult = useResult<void>(
-    useCallback(
-      () =>
-        window.api.setSetting(name, value).then(() => {
-          refetch();
-        }),
-      [name, value, refetch]
-    ),
+    useCallback(() => window.api.setSetting(name, value), [name, value]),
     { autoFetchFirstTime: false }
   );
 
@@ -149,7 +142,8 @@ function BasicSetting({
           <input
             type="text"
             className="input flex-1 min-w-0"
-            value={value}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            value={value as any}
             onChange={(e) => setValue(e.target.value)}
             placeholder="-"
           />
@@ -169,27 +163,45 @@ function BasicSetting({
   );
 }
 
+function SettingGroup({
+  children,
+  label
+}: {
+  children: React.ReactNode;
+  label?: string;
+}): React.JSX.Element {
+  return (
+    <div>
+      {label && <h2 className="font-bold text-xl mb-2">{label}</h2>}
+      <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 w-full">
+        <table className="table">
+          <tbody>{children}</tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 function Settings(): React.JSX.Element {
-  const {
-    loading,
-    data: settings,
-    refetch
-  } = useResult<SettingsType>(useCallback(() => window.api.readSettings(), []));
+  const { settings, loading } = useSettings();
   const [sketchfabApiKey, setSketchfabApiKey] = useState(settings?.sketchfabApiKey ?? "");
   const [polyPizzaApiKey, setPolyPizzaApiKey] = useState(settings?.polyPizzaApiKey ?? "");
-  const [showFeatured, setShowFeatured] = useState(settings?.showFeatured ?? false);
-
-  const resultUpdateShowFeatured = useResult<void>(
-    useCallback(() => window.api.setSetting("showFeatured", !showFeatured), [showFeatured]),
-    { autoFetchFirstTime: false }
+  const [showFeatured, setShowFeatured] = useState(
+    settings?.showFeatured ?? DEFAULT_SETTINGS.showFeatured
   );
+  const [showDebugInfo, setShowDebugInfo] = useState(
+    settings?.showDebugInfo ?? DEFAULT_SETTINGS.showDebugInfo
+  );
+  const [savingFeatured, setSavingFeatured] = useState(false);
+  const [savingDebugInfo, setSavingDebugInfo] = useState(false);
 
   useEffect(() => {
     if (settings) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPolyPizzaApiKey(settings.polyPizzaApiKey);
-      setSketchfabApiKey(settings.sketchfabApiKey);
+      setPolyPizzaApiKey(settings.polyPizzaApiKey ?? "");
+      setSketchfabApiKey(settings.sketchfabApiKey ?? "");
       setShowFeatured(settings.showFeatured);
+      setShowDebugInfo(settings.showDebugInfo);
     }
   }, [settings]);
 
@@ -197,97 +209,155 @@ function Settings(): React.JSX.Element {
     <>
       <CheckDeletedFilesModal />
       <div className="p-4">
-        <h1 className="text-2xl font-bold">Settings</h1>
         {loading || !settings ? (
           <p className="mt-2 text-base-content/70">Loading...</p>
         ) : (
-          <div className="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 mt-4 w-full">
-            <table className="table">
-              <tbody>
-                <tr>
-                  <th>Assets path</th>
-                  <td className="flex items-center justify-end gap-x-2">
+          <div className="flex flex-col gap-y-4">
+            <SettingGroup label="General">
+              <tr>
+                <th>Assets path</th>
+                <td className="flex items-center justify-end gap-x-2">
+                  <input
+                    type="text"
+                    disabled
+                    className="input flex-1 min-w-0"
+                    value={settings.assetsPath ?? "-"}
+                  />
+                  <button className="btn" onClick={() => window.api.changeAssetsPath()}>
+                    Change
+                  </button>
+                </td>
+              </tr>
+            </SettingGroup>
+            <SettingGroup label="Websites">
+              <BasicSetting
+                label="Sketchfab API key"
+                name="sketchfabApiKey"
+                value={sketchfabApiKey}
+                /// @ts-ignore meow mwow
+                setValue={setSketchfabApiKey}
+                actualAppliedSettings={settings}
+              />
+              <BasicSetting
+                label="poly.pizza API key"
+                name="polyPizzaApiKey"
+                value={polyPizzaApiKey}
+                /// @ts-ignore meow mwow
+                setValue={setPolyPizzaApiKey}
+                actualAppliedSettings={settings}
+              />
+            </SettingGroup>
+            <SettingGroup label="Appearance">
+              <tr>
+                <th>Show featured assets</th>
+                <td className="flex items-center justify-end gap-x-2">
+                  <label className="toggle text-base-content">
                     <input
-                      type="text"
-                      disabled
-                      className="input flex-1 min-w-0"
-                      value={settings.assetsPath ?? "-"}
+                      type="checkbox"
+                      checked={showFeatured}
+                      onChange={() => {
+                        const newValue = !showFeatured;
+                        setShowFeatured(newValue);
+                        setSavingFeatured(true);
+                        window.api
+                          .setSetting("showFeatured", newValue)
+                          .finally(() => setSavingFeatured(false));
+                      }}
+                      disabled={savingFeatured}
                     />
-                    <button
-                      className="btn"
-                      onClick={() => window.api.changeAssetsPath().then(refetch)}
+
+                    <svg
+                      aria-label="disabled"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     >
-                      Change
-                    </button>
-                  </td>
-                </tr>
-                <tr>
-                  <th>Show featured assets</th>
-                  <td className="flex items-center justify-end gap-x-2">
-                    <label className="toggle text-base-content">
-                      <input
-                        type="checkbox"
-                        checked={showFeatured}
-                        onChange={() => {
-                          setShowFeatured((s) => !s);
-                          resultUpdateShowFeatured.refetch();
-                        }}
-                        disabled={resultUpdateShowFeatured.loading}
-                      />
-                      <svg
-                        aria-label="enabled"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                      >
-                        <g
-                          strokeLinejoin="round"
-                          strokeLinecap="round"
-                          strokeWidth="4"
-                          fill="none"
-                          stroke="currentColor"
-                        >
-                          <path d="M20 6 9 17l-5-5"></path>
-                        </g>
-                      </svg>
-                      <svg
-                        aria-label="disabled"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
+                      <path d="M18 6 6 18" />
+                      <path d="m6 6 12 12" />
+                    </svg>
+
+                    <svg
+                      aria-label="enabled"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                    >
+                      <g
+                        strokeLinejoin="round"
+                        strokeLinecap="round"
+                        strokeWidth="4"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
                       >
-                        <path d="M18 6 6 18" />
-                        <path d="m6 6 12 12" />
-                      </svg>
-                    </label>
-                  </td>
-                </tr>
-                <BasicSetting
-                  label="Sketchfab API key"
-                  name="sketchfabApiKey"
-                  value={sketchfabApiKey}
-                  setValue={setSketchfabApiKey}
-                  refetch={refetch}
-                  actualAppliedSettings={settings}
-                />
-                <BasicSetting
-                  label="poly.pizza API key"
-                  name="polyPizzaApiKey"
-                  value={polyPizzaApiKey}
-                  setValue={setPolyPizzaApiKey}
-                  refetch={refetch}
-                  actualAppliedSettings={settings}
-                />
-                <ItchIoTestSetting />
-                <CheckDeletedFilesSetting />
-              </tbody>
-            </table>
+                        <path d="M20 6 9 17l-5-5" />
+                      </g>
+                    </svg>
+                  </label>
+                </td>
+              </tr>
+            </SettingGroup>
+            <SettingGroup label="Debug">
+              <ItchIoTestSetting />
+              <CheckDeletedFilesSetting />
+              <tr>
+                <th>Show debug info</th>
+                <td className="flex items-center justify-end gap-x-2">
+                  <label className="toggle text-base-content">
+                    <input
+                      type="checkbox"
+                      checked={showDebugInfo}
+                      onChange={() => {
+                        const newValue = !showDebugInfo;
+                        setShowDebugInfo(newValue);
+                        setSavingDebugInfo(true);
+                        window.api
+                          .setSetting("showDebugInfo", newValue)
+                          .finally(() => setSavingDebugInfo(false));
+                      }}
+                      disabled={savingDebugInfo}
+                    />
+
+                    <svg
+                      aria-label="disabled"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M18 6 6 18" />
+                      <path d="m6 6 12 12" />
+                    </svg>
+
+                    <svg
+                      aria-label="enabled"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                    >
+                      <g
+                        strokeLinejoin="round"
+                        strokeLinecap="round"
+                        strokeWidth="4"
+                        fill="none"
+                        stroke="currentColor"
+                      >
+                        <path d="M20 6 9 17l-5-5" />
+                      </g>
+                    </svg>
+                  </label>
+                </td>
+              </tr>
+            </SettingGroup>
           </div>
         )}
-        <pre className="bg-base-200 p-1">{JSON.stringify(settings, null, 2)}</pre>
+        {settings.showDebugInfo && (
+          <pre className="bg-base-200 p-1">{JSON.stringify(settings, null, 2)}</pre>
+        )}
       </div>
     </>
   );

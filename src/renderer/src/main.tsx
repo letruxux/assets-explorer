@@ -10,6 +10,7 @@ import Settings from "./routes/settings";
 import ErrorFallback from "./components/error-page";
 import { ErrorBoundary } from "react-error-boundary";
 import { useInstalledFiles } from "./store/use-installed-files";
+import { useSettings } from "./store/use-settings";
 
 declare global {
   interface String {
@@ -22,6 +23,7 @@ String.prototype.toTitleCase = function () {
 };
 
 useInstalledFiles.getState().init();
+useSettings.getState().init();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

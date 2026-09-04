@@ -4,7 +4,6 @@ import { useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Folder } from "lucide-react";
 import { useInstalledFiles } from "@renderer/store/use-installed-files";
-import { relativeDate } from "@shared/utils";
 
 export function AssetCard({
   result,
@@ -47,11 +46,7 @@ export function AssetCard({
           "border-green-400": hasAnyFileInstalled
         })}
       >
-        <figure
-          className={cn("overflow-hidden relative aspect-video", {
-            "aspect-4/3": result._asset_source === "itch.io"
-          })}
-        >
+        <figure className={cn("overflow-hidden relative aspect-video", {})}>
           {result.price && (
             <span
               className={cn("badge absolute top-2 left-2", {
@@ -65,13 +60,13 @@ export function AssetCard({
         </figure>
         <div className="card-body">
           <div className="mb-1">
-            <h2 className="card-title">{result.title}</h2>
+            <h2 className="card-title not-hover:truncate">{result.title}</h2>
             <h3 className="text-gray-400">{result.author}</h3>
-            {result._lastUpdated && (
+            {/* {result._lastUpdated && (
               <h4 className="text-gray-400">
                 Updated <span className="font-bold">{relativeDate(result._lastUpdated)}</span>
               </h4>
-            )}
+            )} */}
           </div>
 
           {sortedTags.length > 0 && (
