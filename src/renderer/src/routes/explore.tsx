@@ -20,11 +20,15 @@ function Home(): React.JSX.Element {
     hidePaidAssets,
     setHidePaidAssets
   } = useSearchStore();
+  const { data: settings } = useResult(
+    useCallback(async () => {
+      return await window.api.readSettings();
+    }, [])
+  );
 
   const { data: featured } = useResult(
     useCallback(async () => {
-      const assets = await window.api.getFeatured();
-      return assets;
+      return await window.api.getFeatured();
     }, [])
   );
 
@@ -78,7 +82,14 @@ function Home(): React.JSX.Element {
             onChange={(e) => setSource(e.target.value as AssetSource)}
           >
             {ASSET_SOURCES.map((e) => (
-              <option key={e} value={e}>
+              <option
+                key={e}
+                value={e}
+                disabled={
+                  (e === "poly.pizza" && !settings?.polyPizzaApiKey) ||
+                  (e === "sketchfab" && !settings?.sketchfabApiKey)
+                }
+              >
                 {e}
               </option>
             ))}
@@ -119,14 +130,18 @@ function Home(): React.JSX.Element {
           <div className="h-32 flex items-center justify-center w-full text-base-content/70">
             Start searching!
           </div>
-          <h2 className="px-4 font-bold text-xl">Featured</h2>
-          <section className="grid grid-cols-[repeat(auto-fit,minmax(min(16rem,100%),1fr))] gap-4 p-4">
-            {(featured ?? [])
-              .filter((e) => !hidePaidAssets || e.price === undefined)
-              .map((result) => (
-                <AssetCard key={result.id} result={result} query={query} />
-              ))}
-          </section>
+          {(featured ?? []).length > 0 && (
+            <>
+              <h2 className="px-4 font-bold text-xl">Featured</h2>
+              <section className="grid grid-cols-[repeat(auto-fit,minmax(min(16rem,100%),1fr))] gap-4 p-4">
+                {(featured ?? [])
+                  .filter((e) => !hidePaidAssets || e.price === undefined)
+                  .map((result) => (
+                    <AssetCard key={result.id} result={result} query={query} />
+                  ))}
+              </section>
+            </>
+          )}
         </div>
       )}
     </div>

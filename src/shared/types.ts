@@ -79,6 +79,7 @@ export interface SettingsType {
   assetsPath: string;
   sketchfabApiKey: string;
   polyPizzaApiKey: string;
+  showFeatured: boolean;
 }
 
 export interface InstalledFile {

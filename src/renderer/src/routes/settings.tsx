@@ -177,12 +177,19 @@ function Settings(): React.JSX.Element {
   } = useResult<SettingsType>(useCallback(() => window.api.readSettings(), []));
   const [sketchfabApiKey, setSketchfabApiKey] = useState(settings?.sketchfabApiKey ?? "");
   const [polyPizzaApiKey, setPolyPizzaApiKey] = useState(settings?.polyPizzaApiKey ?? "");
+  const [showFeatured, setShowFeatured] = useState(settings?.showFeatured ?? false);
+
+  const resultUpdateShowFeatured = useResult<void>(
+    useCallback(() => window.api.setSetting("showFeatured", !showFeatured), [showFeatured]),
+    { autoFetchFirstTime: false }
+  );
 
   useEffect(() => {
     if (settings) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setPolyPizzaApiKey(settings.polyPizzaApiKey);
       setSketchfabApiKey(settings.sketchfabApiKey);
+      setShowFeatured(settings.showFeatured);
     }
   }, [settings]);
 
@@ -212,6 +219,50 @@ function Settings(): React.JSX.Element {
                     >
                       Change
                     </button>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Show featured assets</th>
+                  <td className="flex items-center justify-end gap-x-2">
+                    <label className="toggle text-base-content">
+                      <input
+                        type="checkbox"
+                        checked={showFeatured}
+                        onChange={() => {
+                          setShowFeatured((s) => !s);
+                          resultUpdateShowFeatured.refetch();
+                        }}
+                        disabled={resultUpdateShowFeatured.loading}
+                      />
+                      <svg
+                        aria-label="enabled"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                      >
+                        <g
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
+                          strokeWidth="4"
+                          fill="none"
+                          stroke="currentColor"
+                        >
+                          <path d="M20 6 9 17l-5-5"></path>
+                        </g>
+                      </svg>
+                      <svg
+                        aria-label="disabled"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M18 6 6 18" />
+                        <path d="m6 6 12 12" />
+                      </svg>
+                    </label>
                   </td>
                 </tr>
                 <BasicSetting
