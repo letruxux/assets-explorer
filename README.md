@@ -1,6 +1,7 @@
 <h1><img src="resources/icon.png" height=24 /> Assets Explorer</h1>
 
 App to manage and download game development assets from various sources.
+
 ![Viewing asset "Silenced Pistols"](/screenshots/view-asset-2.gif)
 
 ## Features
@@ -15,6 +16,10 @@ App to manage and download game development assets from various sources.
 - [sketchfab](https://sketchfab.com)
 - [poly.pizza](https://poly.pizza)
 - [kenney.nl](https://kenney.nl)
+
+## What's next
+
+Check [issues](/issues).
 
 ## Screenshots
 
