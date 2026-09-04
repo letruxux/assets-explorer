@@ -2,7 +2,7 @@
 
 App to manage and download game development assets from various sources.
 
-<img src="/screenshots/my-assets.png" height="200" />
+<img src="/screenshots/my-assets.png" height="400" />
 
 ## Features
 
