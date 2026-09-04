@@ -1,8 +1,7 @@
 <h1><img src="resources/icon.png" height=24 /> Assets Explorer</h1>
 
 App to manage and download game development assets from various sources.
-
-<img src="/screenshots/my-assets.png" height="400" />
+![Viewing asset "Silenced Pistols"](/screenshots/view-asset-2.gif)
 
 ## Features
 
@@ -21,13 +20,13 @@ App to manage and download game development assets from various sources.
 
 ### Search
 
-![search](/screenshots/search.png)
+![Searching "car" on poly.pizza](/screenshots/search.png)
 
 ### View asset
 
-![asset-view-1](/screenshots/view-asset-2.gif)
-![asset-view-2](/screenshots/view-asset-1.png)
+![Viewing asset "Silenced Pistols"](/screenshots/view-asset-2.gif)
+![Viewing asset "City Kit (Industrial)"](/screenshots/view-asset-1.png)
 
 ### My assets
 
-![my-assets](/screenshots/my-assets.png)
+!["My assets" page](/screenshots/my-assets.png)
