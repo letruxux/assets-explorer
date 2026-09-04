@@ -113,7 +113,6 @@ export async function fetchDownloadUrls(
   $: cheerio.CheerioAPI,
   downloadsPreview: { name: string; free: boolean }[]
 ): Promise<ItchIoAsset["downloads"]> {
-  return [];
   const csrfToken = $('meta[name="csrf_token"]').attr("value");
   if (!csrfToken) throw new Error("No csrf token found");
 
