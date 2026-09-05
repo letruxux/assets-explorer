@@ -11,6 +11,7 @@ import {
 export type ApiType = {
   searchAssets(query: string, source: AssetSource): Promise<AssetPreview[]>;
   fetchAssetDetail(id: string): Promise<Asset>;
+  getDownloads(id: string): Promise<AssetFile[]>;
   getInstalledFiles(): Promise<InstalledFile[]>;
   downloadFile(asset: Asset, file: AssetFile): Promise<void>;
   readSettings(): Promise<SettingsType>;
@@ -33,6 +34,7 @@ export type ApiType = {
 export const API_CHANNELS = [
   "searchAssets",
   "fetchAssetDetail",
+  "getDownloads",
   "getInstalledFiles",
   "downloadFile",
   "readSettings",

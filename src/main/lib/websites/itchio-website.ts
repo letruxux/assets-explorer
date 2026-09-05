@@ -1,4 +1,4 @@
-import { AssetPreview, Asset, parseId } from "@shared/types";
+import { Asset, AssetFile, AssetPreview, parseId } from "@shared/types";
 import { BaseWebsite, WebsiteCallConfig } from "./base";
 import { TTLCache } from "@isaacs/ttlcache";
 import { makeMs } from "@lib/utils";
@@ -84,6 +84,17 @@ class ItchIoWebsite extends BaseWebsite {
       .then((e) => e.slice(0, 5));
     this.itchIoFeaturedCache.set("all", results);
     return results;
+  }
+
+  async fetchDownloads(id: string): Promise<AssetFile[]> {
+    const url = parseId(id).pageUrl;
+    const downloads = await itchIoApi.fetchItchIoAssetDownloads(url);
+    return downloads.map((e) => ({
+      name: e.name,
+      direct_url: e.url,
+      date: e.date,
+      file_size: e.file_size || undefined
+    }));
   }
 }
 

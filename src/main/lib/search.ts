@@ -1,4 +1,4 @@
-import { Asset, AssetPreview, AssetSource, parseId } from "@shared/types";
+import { Asset, AssetFile, AssetPreview, AssetSource, parseId } from "@shared/types";
 import { kenneyWebsite } from "./websites/kenney-website";
 import { itchIoWebsite } from "./websites/itchio-website";
 import { sketchfabWebsite } from "./websites/sketchfab-website";
@@ -24,6 +24,13 @@ export async function getAsset(id: string): Promise<Asset> {
   const website = ALL_WEBSITES[source] as BaseWebsite;
   if (!website) throw new Error("Unknown asset source: " + source);
   return website.fetchAsset(id);
+}
+
+export async function getDownloads(id: string): Promise<AssetFile[]> {
+  const { source } = parseId(id);
+  const website = ALL_WEBSITES[source] as BaseWebsite;
+  if (!website) throw new Error("Unknown asset source: " + source);
+  return website.fetchDownloads(id);
 }
 
 function randomSort<T>(arr: T[]): T[] {

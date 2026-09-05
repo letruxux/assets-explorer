@@ -1,4 +1,4 @@
-import { AssetPreview, Asset, parseId, buildId } from "@shared/types";
+import { Asset, AssetFile, AssetPreview, buildId, parseId } from "@shared/types";
 import { BaseWebsite, WebsiteCallConfig } from "./base";
 import { TTLCache } from "@isaacs/ttlcache";
 import { makeFilenameSafe, makeMs } from "@lib/utils";
@@ -92,6 +92,11 @@ class PolyPizzaWebsite extends BaseWebsite {
       .then((e) => e.map(this._normalizeAssetPreview))
       .then((e) => e.slice(0, 5));
     return results;
+  }
+
+  async fetchDownloads(id: string): Promise<AssetFile[]> {
+    const asset = await this.fetchAsset(id);
+    return asset.files;
   }
 }
 

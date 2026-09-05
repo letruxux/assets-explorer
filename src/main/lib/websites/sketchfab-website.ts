@@ -1,4 +1,4 @@
-import { AssetPreview, Asset, parseId } from "@shared/types";
+import { Asset, AssetFile, AssetPreview, parseId } from "@shared/types";
 import { BaseWebsite, WebsiteCallConfig } from "./base";
 import { TTLCache } from "@isaacs/ttlcache";
 import { formatBytes, makeMs } from "@lib/utils";
@@ -13,6 +13,24 @@ class SketchfabWebsite extends BaseWebsite {
     max: 50,
     ttl: ONE_DAY
   });
+  downloadsCache = new TTLCache<string, AssetFile[]>({ max: 50, ttl: Infinity });
+
+  private _normalizeDownloadFile(
+    format: string,
+    e: { size?: number; url: string },
+    extra: Partial<Pick<AssetFile, "date" | "download_count">> = {}
+  ): AssetFile {
+    const filename = new URL(e.url).pathname.split("/").pop()!;
+    const ext = extname(filename);
+    const name = filename.slice(0, -ext.length);
+
+    return {
+      name: `${name}-${format}${ext}`,
+      direct_url: e.url,
+      file_size: e.size ? formatBytes(e.size) : undefined,
+      ...extra
+    };
+  }
 
   private _normalizeAsset(asset: sketchfabApi.SketchfabAsset): Asset {
     return {
@@ -22,19 +40,12 @@ class SketchfabWebsite extends BaseWebsite {
       changelog: [],
       id: asset.id,
       images: (asset.thumbnails?.images ?? []).map((e) => e.url!) ?? [],
-      files: Object.entries(asset.downloads).map(([format, e]) => {
-        const filename = new URL(e.url).pathname.split("/").pop()!;
-        const ext = extname(filename);
-        const name = filename.slice(0, -ext.length);
-
-        return {
-          name: `${name}-${format}${ext}`,
-          direct_url: e.url,
+      files: Object.entries(asset.downloads ?? {}).map(([format, e]) =>
+        this._normalizeDownloadFile(format, e, {
           date: asset.updatedAt,
-          download_count: asset.downloadCount,
-          file_size: e.size ? formatBytes(e.size) : undefined
-        };
-      }),
+          download_count: asset.downloadCount
+        })
+      ),
       metadata: {
         tags: asset.tags?.map((e) => e.name) ?? [],
         categories: asset.categories?.map((e) => e.name!) ?? [],
@@ -106,6 +117,33 @@ class SketchfabWebsite extends BaseWebsite {
       .then((e) => e.map(this._normalizeAssetPreview))
       .then((e) => e.slice(0, 5));
     return results;
+  }
+
+  async fetchDownloads(id: string): Promise<AssetFile[]> {
+    const uid = parseId(id).assetId;
+    if (!uid) throw new Error("Invalid asset id");
+
+    const cached = this.downloadsCache.get(uid);
+    if (cached) return cached;
+
+    const downloads = await sketchfabApi.fetchAssetDownloads(uid);
+
+    const ttlMs =
+      downloads && Object.keys(downloads).length > 0
+        ? Math.min(
+            ...Object.values(downloads).map((e) => Math.max(0, e.expires * 1000 - Date.now()))
+          )
+        : 0;
+
+    const files = Object.entries(downloads).map(([format, e]) =>
+      this._normalizeDownloadFile(format, e)
+    );
+
+    if (ttlMs > 0) {
+      this.downloadsCache.set(uid, files, { ttl: ttlMs });
+    }
+
+    return files;
   }
 }
 

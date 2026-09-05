@@ -259,7 +259,6 @@ export async function fetchItchIoAsset(url: string): Promise<ItchIoAsset> {
     })
     .get();
 
-  const downloads = await fetchDownloadUrls(url, $, downloadsPreview);
   const id = itchIoUrlToId(url);
 
   return {
@@ -270,26 +269,52 @@ export async function fetchItchIoAsset(url: string): Promise<ItchIoAsset> {
     images,
     id,
     _asset_source: "itch.io" as const,
-    downloads: (() => {
-      const finalMap = new Map<string, ItchIoAsset["downloads"][number]>();
-      for (const dl of downloads) {
-        finalMap.set(dl.name, dl);
-      }
-      for (const dl of downloadsPreview) {
-        if (!finalMap.has(dl.name)) {
-          finalMap.set(dl.name, {
-            date: new Date().toISOString(),
-            name: dl.name,
-            url: "",
-            file_size: "",
-            free: dl.free
-          });
-        }
-      }
-      return Array.from(finalMap.values());
-    })(),
+    downloads: downloadsPreview.map((dl) => ({
+      date: new Date().toISOString(),
+      name: dl.name,
+      url: "",
+      file_size: "",
+      free: dl.free
+    })),
     meta,
     _extracted,
     updates
   } satisfies ItchIoAsset;
+}
+
+export async function fetchItchIoAssetDownloads(url: string): Promise<ItchIoAsset["downloads"]> {
+  const response = await fetch(url);
+  if (!response.ok) throw await buildResponseNotOkError(response);
+  const html = await response.text();
+  const $ = cheerio.load(html);
+
+  const downloadsPreview = $(".uploads .upload_list_widget .upload")
+    .map((_, el) => {
+      const $el = $(el);
+      const name = $el.find(".upload_name strong").attr("title")!;
+      const free = $el.find(".file_price").text() === "";
+      return { name, free };
+    })
+    .get();
+
+  const downloads = await fetchDownloadUrls(url, $, downloadsPreview);
+
+  return (() => {
+    const finalMap = new Map<string, ItchIoAsset["downloads"][number]>();
+    for (const dl of downloads) {
+      finalMap.set(dl.name, dl);
+    }
+    for (const dl of downloadsPreview) {
+      if (!finalMap.has(dl.name)) {
+        finalMap.set(dl.name, {
+          date: new Date().toISOString(),
+          name: dl.name,
+          url: "",
+          file_size: "",
+          free: dl.free
+        });
+      }
+    }
+    return Array.from(finalMap.values());
+  })();
 }

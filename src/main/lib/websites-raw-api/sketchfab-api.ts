@@ -235,18 +235,10 @@ export async function getFeatured(): Promise<SketchfabAssetPreview[]> {
 }
 
 export async function fetchAsset(id: string): Promise<SketchfabAsset> {
-  const [resp, downloadsResp, shareResp] = await Promise.all([
+  const [resp, shareResp] = await Promise.all([
     fetch(`https://api.sketchfab.com/v3/models/${id}`, {
       headers: {
         accept: "application/json"
-      },
-      body: null,
-      method: "GET"
-    }),
-    fetch(`https://api.sketchfab.com/v3/models/${id}/download`, {
-      headers: {
-        accept: "application/json",
-        Authorization: `Token ${settings.get("sketchfabApiKey")}`
       },
       body: null,
       method: "GET"
@@ -257,21 +249,12 @@ export async function fetchAsset(id: string): Promise<SketchfabAsset> {
   if (!resp.ok) throw await buildResponseNotOkError(resp);
   const json = _fixAsset(await resp.json()) as SketchfabAsset;
 
-  if (!downloadsResp.ok) throw await buildResponseNotOkError(downloadsResp);
-  const downloadsJson = (await downloadsResp.json()) as {
-    [key: string]: {
-      size?: number;
-      url: string;
-      expires: number;
-    };
-  };
-
   if (!shareResp.ok) throw await buildResponseNotOkError(shareResp);
   const shareJson = (await shareResp.json()) as {
     shortUrl: string;
   };
 
-  return { ...json, downloads: downloadsJson, shortUrl: shareJson.shortUrl };
+  return { ...json, downloads: {}, shortUrl: shareJson.shortUrl };
 }
 
 export async function verifySketchfabApiKey(key: string): Promise<boolean> {
@@ -283,4 +266,17 @@ export async function verifySketchfabApiKey(key: string): Promise<boolean> {
   });
   if (!resp.ok) return false;
   return true;
+}
+
+export async function fetchAssetDownloads(id: string): Promise<SketchfabAsset["downloads"]> {
+  const downloadsResp = await fetch(`https://api.sketchfab.com/v3/models/${id}/download`, {
+    headers: {
+      accept: "application/json",
+      Authorization: `Token ${settings.get("sketchfabApiKey")}`
+    },
+    body: null,
+    method: "GET"
+  });
+  if (!downloadsResp.ok) throw await buildResponseNotOkError(downloadsResp);
+  return (await downloadsResp.json()) as SketchfabAsset["downloads"];
 }

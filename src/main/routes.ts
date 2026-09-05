@@ -1,7 +1,7 @@
 import { app, ipcMain, shell } from "electron";
 import { settings } from "@modules/settings";
 import { getAssetsManifest } from "@modules/assets-manifest";
-import { getAsset, getFeatured, search } from "@lib/search";
+import { getAsset, getDownloads, getFeatured, search } from "@lib/search";
 import { actions } from "./actions";
 import type { ApiType } from "@shared/api";
 import type { InstalledFile } from "@shared/types";
@@ -68,6 +68,10 @@ const api: ApiType = {
 
   fetchAssetDetail(id) {
     return getAsset(id);
+  },
+
+  getDownloads(id) {
+    return getDownloads(id);
   },
 
   checkForDeletedFiles() {

@@ -1,4 +1,4 @@
-import { AssetPreview, Asset, parseId } from "@shared/types";
+import { Asset, AssetFile, AssetPreview, parseId } from "@shared/types";
 import { BaseWebsite, WebsiteCallConfig } from "./base";
 import { TTLCache } from "@isaacs/ttlcache";
 import { makeMs } from "@lib/utils";
@@ -104,6 +104,11 @@ class KenneyWebsite extends BaseWebsite {
     const all = await this.getAllKenneyAssets();
     all.sort((b, a) => new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime());
     return all.slice(0, 5).map(assetToAssetPreview);
+  }
+
+  async fetchDownloads(id: string): Promise<AssetFile[]> {
+    const asset = await this.fetchAsset(id);
+    return asset.files;
   }
 }
 
