@@ -44,7 +44,7 @@ export async function searchPolyPizza(
   const url = `https://api.poly.pizza/v1.1/search/${encodeURIComponent(query)}?${params.toString()}`;
   const response = await fetch(url, {
     headers: {
-      "x-auth-token": settings.get("polyPizzaApiKey")
+      "x-auth-token": settings.getOrError("polyPizzaApiKey")
     }
   });
   if (!response.ok) throw await buildResponseNotOkError(response);
@@ -60,7 +60,7 @@ export async function getFeatured(): Promise<PolyPizzaAssetPreview[]> {
   const url = `https://api.poly.pizza/v1.1/search?${params.toString()}`;
   const response = await fetch(url, {
     headers: {
-      "x-auth-token": settings.get("polyPizzaApiKey")
+      "x-auth-token": settings.getOrError("polyPizzaApiKey")
     }
   });
   if (!response.ok) throw await buildResponseNotOkError(response);
@@ -89,7 +89,7 @@ export interface PolyPizzaAsset {
 export async function fetchPolyPizzaModel(id: string): Promise<PolyPizzaAsset> {
   const response = await fetch(`https://api.poly.pizza/v1.1/model/${id}`, {
     headers: {
-      "x-auth-token": settings.get("polyPizzaApiKey")
+      "x-auth-token": settings.getOrError("polyPizzaApiKey")
     }
   });
   if (!response.ok) throw await buildResponseNotOkError(response);

@@ -61,9 +61,8 @@ let assetsManifestFile: AssetsManifestFile | null = null;
 export function getAssetsManifest(): AssetsManifestFile | null {
   if (!assetsManifestFile) {
     try {
-      if (!settings.get("assetsPath")) throw new Error("No assets path set");
       assetsManifestFile = new AssetsManifestFile(
-        join(settings.get("assetsPath")! as string, ".assets.json")
+        join(settings.getOrError("assetsPath"), ".assets.json")
       );
     } catch (err) {
       console.error(err);

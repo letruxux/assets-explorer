@@ -33,7 +33,7 @@ const api: ApiType = {
   },
 
   async readSettings() {
-    return settings.get();
+    return settings.getAll();
   },
 
   async setSetting(key, value) {

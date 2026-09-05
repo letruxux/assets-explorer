@@ -27,11 +27,7 @@ export default async function downloadFile(
   const { slug, assetId } = parseId(asset.id);
   const { direct_url: url, name: assetName } = file;
 
-  const assetsPath = settings.get("assetsPath");
-
-  if (!assetsPath) {
-    throw new Error("No assets path set");
-  }
+  const assetsPath = settings.getOrError("assetsPath");
 
   const response = await fetch(url);
   const filename = guessAssetFilename(url, assetName, asset.id, response.headers);
