@@ -4,6 +4,7 @@ import { useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Folder } from "lucide-react";
 import { useInstalledFiles } from "@renderer/store/use-installed-files";
+import { AssetSourceBadge } from "./asset-source-icon";
 
 export function AssetCard({
   result,
@@ -69,8 +70,9 @@ export function AssetCard({
             )} */}
           </div>
 
-          {sortedTags.length > 0 && (
+          {(!query || sortedTags.length > 0) && (
             <div className="flex gap-x-2 w-full overflow-auto scrollbar-none">
+              {!query && <AssetSourceBadge source={result._asset_source} />}
               {sortedTags.map((e) => (
                 <span
                   className={cn("badge whitespace-nowrap", {

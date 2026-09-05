@@ -17,3 +17,15 @@
     }
   }
 }
+
+.badge-orange {
+  @apply text-orange-400 border-orange-400;
+}
+
+.badge-kenney {
+  @apply text-teal-400 border-teal-400;
+}
+
+.badge-sketchfab {
+  @apply border-blue-400 text-blue-400;
+}
