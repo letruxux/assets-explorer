@@ -205,6 +205,10 @@ function Settings(): React.JSX.Element {
     }
   }, [settings]);
 
+  const { data: version, loading: versionLoading } = useResult(
+    useCallback(() => window.api.getVersion(), [])
+  );
+
   return (
     <>
       <CheckDeletedFilesModal />
@@ -353,6 +357,15 @@ function Settings(): React.JSX.Element {
                 </td>
               </tr>
             </SettingGroup>
+            <span className="text-base-content/70">
+              {versionLoading ? (
+                "Loading..."
+              ) : (
+                <code>
+                  {version?.name} v{version?.version}
+                </code>
+              )}
+            </span>
           </div>
         )}
         {settings.showDebugInfo && (

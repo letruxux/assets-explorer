@@ -1,4 +1,4 @@
-import { ipcMain, shell } from "electron";
+import { app, ipcMain, shell } from "electron";
 import { settings } from "@modules/settings";
 import { getAssetsManifest } from "@modules/assets-manifest";
 import { getAsset, getFeatured, search } from "@lib/search";
@@ -34,6 +34,10 @@ const api: ApiType = {
 
   async readSettings() {
     return settings.getAll();
+  },
+
+  async getVersion() {
+    return { version: app.getVersion(), name: app.getName() };
   },
 
   async setSetting(key, value) {
