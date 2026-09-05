@@ -86,12 +86,26 @@ export interface PolyPizzaAsset {
   Animated: boolean;
 }
 
-export async function fetchPolyPizzaModel(id: string): Promise<PolyPizzaAsset> {
+async function _rawFetchPolyPizzaModel(id: string, key: string): Promise<PolyPizzaAsset> {
   const response = await fetch(`https://api.poly.pizza/v1.1/model/${id}`, {
     headers: {
-      "x-auth-token": settings.getOrError("polyPizzaApiKey")
+      "x-auth-token": key
     }
   });
   if (!response.ok) throw await buildResponseNotOkError(response);
   return response.json();
+}
+
+export async function fetchPolyPizzaModel(id: string): Promise<PolyPizzaAsset> {
+  return _rawFetchPolyPizzaModel(id, settings.getOrError("polyPizzaApiKey"));
+}
+
+export async function verifyPolyPizzaApiKey(key: string): Promise<boolean> {
+  try {
+    await _rawFetchPolyPizzaModel("5zUWP5UsLg-", key);
+    return true;
+  } catch (e) {
+    console.error(e);
+    return false;
+  }
 }

@@ -1,7 +1,7 @@
 import useResult from "@renderer/hooks/use-result";
 import { useSettings } from "@renderer/store/use-settings";
 import { DEFAULT_SETTINGS, SettingsType } from "@shared/types";
-import { Loader2, SaveIcon } from "lucide-react";
+import { ExternalLinkIcon, Loader2, SaveIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 function ItchIoTestSetting(): React.JSX.Element {
@@ -119,13 +119,17 @@ function BasicSetting({
   value,
   setValue,
   label,
-  actualAppliedSettings
+  actualAppliedSettings,
+  urlLink,
+  inputType = "text"
 }: {
   name: keyof SettingsType;
   value: SettingsType[keyof SettingsType];
   setValue: (value: SettingsType[keyof SettingsType]) => void;
   label?: string;
   actualAppliedSettings: SettingsType | null;
+  urlLink?: string;
+  inputType?: HTMLInputElement["type"];
 }): React.JSX.Element {
   const initialValue = useMemo(() => actualAppliedSettings?.[name], [actualAppliedSettings, name]);
 
@@ -134,13 +138,33 @@ function BasicSetting({
     { autoFetchFirstTime: false }
   );
 
+  const hasChanged = useMemo(
+    () =>
+      typeof value === "string" && typeof initialValue !== "string"
+        ? (initialValue ?? "") !== value
+        : initialValue !== value,
+    [initialValue, value]
+  );
+
   return (
     <tr>
-      <th>{label || name}</th>
+      <th>
+        {urlLink && (
+          <a
+            href={urlLink}
+            rel="noreferrer"
+            target="_blank"
+            className="hover:underline cursor-pointer flex items-center gap-x-1"
+          >
+            {label || name} <ExternalLinkIcon className="inline-block w-4 h-4" />
+          </a>
+        )}
+        {!urlLink && <>{label || name}</>}
+      </th>
       <td className="flex flex-col items-end gap-y-2">
         <div className="flex items-center justify-end gap-x-2 w-full">
           <input
-            type="text"
+            type={inputType}
             className="input flex-1 min-w-0"
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             value={value as any}
@@ -149,7 +173,7 @@ function BasicSetting({
           />
           <button
             className="btn btn-square"
-            disabled={value === initialValue || setSettingResult.loading}
+            disabled={!hasChanged || setSettingResult.loading}
             onClick={() => setSettingResult.refetch()}
           >
             {setSettingResult.loading ? <Loader2 className="animate-spin" /> : <SaveIcon />}
@@ -184,8 +208,8 @@ function SettingGroup({
 
 function Settings(): React.JSX.Element {
   const { settings, loading } = useSettings();
-  const [sketchfabApiKey, setSketchfabApiKey] = useState(settings?.sketchfabApiKey ?? "");
-  const [polyPizzaApiKey, setPolyPizzaApiKey] = useState(settings?.polyPizzaApiKey ?? "");
+  const [sketchfabApiKey, setSketchfabApiKey] = useState(settings?.sketchfabApiKey);
+  const [polyPizzaApiKey, setPolyPizzaApiKey] = useState(settings?.polyPizzaApiKey);
   const [showFeatured, setShowFeatured] = useState(
     settings?.showFeatured ?? DEFAULT_SETTINGS.showFeatured
   );
@@ -198,8 +222,8 @@ function Settings(): React.JSX.Element {
   useEffect(() => {
     if (settings) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPolyPizzaApiKey(settings.polyPizzaApiKey ?? "");
-      setSketchfabApiKey(settings.sketchfabApiKey ?? "");
+      setPolyPizzaApiKey(settings.polyPizzaApiKey);
+      setSketchfabApiKey(settings.sketchfabApiKey);
       setShowFeatured(settings.showFeatured);
       setShowDebugInfo(settings.showDebugInfo);
     }
@@ -241,6 +265,8 @@ function Settings(): React.JSX.Element {
                 /// @ts-ignore meow mwow
                 setValue={setSketchfabApiKey}
                 actualAppliedSettings={settings}
+                inputType="password"
+                urlLink="https://sketchfab.com/settings/password"
               />
               <BasicSetting
                 label="poly.pizza API key"
@@ -249,6 +275,8 @@ function Settings(): React.JSX.Element {
                 /// @ts-ignore meow mwow
                 setValue={setPolyPizzaApiKey}
                 actualAppliedSettings={settings}
+                inputType="password"
+                urlLink="https://poly.pizza/settings/api"
               />
             </SettingGroup>
             <SettingGroup label="Appearance">

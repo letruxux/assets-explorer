@@ -6,6 +6,7 @@ import { actions } from "./actions";
 import type { ApiType } from "@shared/api";
 import type { InstalledFile } from "@shared/types";
 import { verifySketchfabApiKey } from "./lib/websites-raw-api/sketchfab-api";
+import { verifyPolyPizzaApiKey } from "./lib/websites-raw-api/poly-pizza-api";
 
 const api: ApiType = {
   changeAssetsPath() {
@@ -44,6 +45,10 @@ const api: ApiType = {
     if (key === "sketchfabApiKey" && value !== "") {
       const valid = await verifySketchfabApiKey(value as string);
       if (!valid) throw new Error("Invalid Sketchfab API key");
+    }
+    if (key === "polyPizzaApiKey" && value !== "") {
+      const valid = await verifyPolyPizzaApiKey(value as string);
+      if (!valid) throw new Error("Invalid poly.pizza API key");
     }
 
     settings.set(key, value);

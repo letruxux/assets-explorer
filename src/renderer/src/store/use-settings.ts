@@ -8,13 +8,6 @@ interface SettingsState {
   init(): void;
 }
 
-function fillMissingSettings(settings: SettingsType): SettingsType {
-  return {
-    ...DEFAULT_SETTINGS,
-    ...settings
-  };
-}
-
 export const useSettings = create<SettingsState>()((set, get) => ({
   settings: DEFAULT_SETTINGS,
   loading: false,
@@ -23,7 +16,7 @@ export const useSettings = create<SettingsState>()((set, get) => ({
     set({ loading: true });
     window.api
       .readSettings()
-      .then((settings) => set({ settings: fillMissingSettings(settings) }))
+      .then((settings) => set({ settings: settings }))
       .finally(() => set({ loading: false }));
   },
   init() {

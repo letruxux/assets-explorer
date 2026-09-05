@@ -33,8 +33,15 @@ export async function getFeatured(): Promise<AssetPreview[]> {
   if (settings.get("showFeatured") !== true) return [];
 
   const websites = Object.values(ALL_WEBSITES);
-  const results = await Promise.all(
+  const results = await Promise.allSettled(
     websites.filter((website) => website.fetchFeatured).map((website) => website.fetchFeatured())
   );
-  return randomSort(results.flat());
+
+  const successfulResults = results
+    .filter(
+      (result): result is PromiseFulfilledResult<AssetPreview[]> => result.status === "fulfilled"
+    )
+    .map((result) => result.value);
+
+  return randomSort(successfulResults.flat());
 }
