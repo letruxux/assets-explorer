@@ -1,5 +1,5 @@
 appId: com.letruxux.assets-explorer
-productName: assets-explorer
+productName: Assets Explorer
 directories:
   buildResources: build
 files:
