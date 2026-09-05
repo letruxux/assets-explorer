@@ -1,6 +1,6 @@
 import { buildId, parseId } from "@shared/types";
 import * as cheerio from "cheerio";
-import { buildResponseNotOkError, USER_AGENT } from "@lib/utils";
+import { buildResponseNotOkError, getHighestResFromSetsrc, USER_AGENT } from "@lib/utils";
 import { fetchWithElectronBrowser } from "@lib/cf-solve";
 import { NodeHtmlMarkdown } from "node-html-markdown";
 
@@ -184,8 +184,11 @@ export async function fetchItchIoAsset(url: string): Promise<ItchIoAsset> {
   const images = vgPage
     .find(".screenshot_list img")
     .map((_, el) => {
-      return $(el).attr("src")!;
+      return $(el).attr("srcset")
+        ? getHighestResFromSetsrc($(el).attr("srcset")!)
+        : ($(el).attr("src") ?? undefined);
     })
+    .filter((e) => e !== undefined)
     .get();
 
   const moreInfoTableRows = $(".info_panel_wrapper table tbody tr");

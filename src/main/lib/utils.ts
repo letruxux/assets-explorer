@@ -1,3 +1,4 @@
+import { ExtendedHTTPError } from "@shared/errors";
 import { parseId } from "@shared/types";
 import { writeFile } from "fs/promises";
 import { tmpdir } from "os";
@@ -113,12 +114,24 @@ export async function buildResponseNotOkError(r: Response): Promise<Error> {
 
   await writeFile(path, text);
 
-  return new Error(
+  return new ExtendedHTTPError(
     `
 Request failed ${r.status}
   URL: ${r.url}
   Status: ${r.statusText}
   Text: ${path}
-`.trim()
+`.trim(),
+    r.status
+  );
+}
+
+export function getHighestResFromSetsrc(srcset: string): string {
+  const matches = [...srcset.matchAll(/(?<url>\S+)\s+(?<density>\d+(?:\.\d+)?)x/g)];
+
+  if (!matches.length) throw new Error("Could not parse srcset");
+
+  return (
+    matches.sort((a, b) => Number(b.groups?.density ?? 0) - Number(a.groups?.density ?? 0))[0]
+      .groups?.url ?? ""
   );
 }

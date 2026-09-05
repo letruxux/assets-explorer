@@ -6,7 +6,7 @@ import { isEntryEmpty } from "./metadata-utils";
 import { Changelog } from "./changelog";
 import { AssetDownloads } from "./downloads";
 import Description from "./description";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Loader2 } from "lucide-react";
 import { Images } from "./images";
 import { useSettings } from "@renderer/store/use-settings";
 
@@ -69,7 +69,12 @@ function ViewAsset(): React.JSX.Element {
   const { settings } = useSettings();
 
   if (loading) {
-    return <div className="p-4">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-dvh w-full flex-col gap-y-2">
+        <Loader2 className="animate-spin" />
+        <span>Loading asset...</span>
+      </div>
+    );
   }
 
   if (error) {
@@ -77,7 +82,7 @@ function ViewAsset(): React.JSX.Element {
   }
 
   if (!asset) {
-    return <div className="p-4">Asset not found</div>;
+    return <div className="p-4">Asset not found</div>; /* this should never happen anyway */
   }
 
   return (
@@ -96,7 +101,7 @@ function ViewAsset(): React.JSX.Element {
             <span className="truncate">{asset.title}</span>{" "}
             <ExternalLink className="inline shrink-0" />
           </a>
-          <small className="text-gray-500 text-xs">#{asset.id}</small>
+          {settings.showDebugInfo && <small className="text-gray-500 text-xs">#{asset.id}</small>}
         </span>
       </h1>
 

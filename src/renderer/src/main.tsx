@@ -19,7 +19,9 @@ declare global {
 }
 
 String.prototype.toTitleCase = function () {
-  return this.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+  return this.toLowerCase()
+    .replace(/(^|[-_;\s])(\w)/g, (_, _sep, char) => " " + char.toUpperCase())
+    .trim();
 };
 
 useInstalledFiles.getState().init();

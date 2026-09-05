@@ -4,6 +4,7 @@ import { itchIoWebsite } from "./websites/itchio-website";
 import { sketchfabWebsite } from "./websites/sketchfab-website";
 import { polyPizzaWebsite } from "./websites/polypizza-website";
 import { settings } from "./modules/settings";
+import { BaseWebsite } from "./websites/base";
 
 const ALL_WEBSITES = {
   "itch.io": itchIoWebsite,
@@ -20,7 +21,7 @@ export async function search(query: string, source: AssetSource): Promise<AssetP
 
 export async function getAsset(id: string): Promise<Asset> {
   const { source } = parseId(id);
-  const website = ALL_WEBSITES[source];
+  const website = ALL_WEBSITES[source] as BaseWebsite;
   if (!website) throw new Error("Unknown asset source: " + source);
   return website.fetchAsset(id);
 }

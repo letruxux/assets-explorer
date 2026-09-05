@@ -1,3 +1,4 @@
+import { AssetCard } from "@renderer/components/asset-card";
 import useResult from "@renderer/hooks/use-result";
 import { useSettings } from "@renderer/store/use-settings";
 import { DEFAULT_SETTINGS, SettingsType } from "@shared/types";
@@ -397,7 +398,20 @@ function Settings(): React.JSX.Element {
           </div>
         )}
         {settings.showDebugInfo && (
-          <pre className="bg-base-200 p-1">{JSON.stringify(settings, null, 2)}</pre>
+          <div className="my-4 gap-y-4 flex flex-col">
+            <pre className="bg-base-200 p-1">{JSON.stringify(settings, null, 2)}</pre>
+            <AssetCard
+              result={{
+                _asset_source: "itch.io",
+                id: "itch.io|lol|mocc",
+                images: ["https://media1.tenor.com/m/pVAqRwhITQwAAAAC/happy-steam.gif"],
+                page_url: "",
+                author: "will error (not found)",
+                tags: ["steamhappy"],
+                title: "Test asset"
+              }}
+            />
+          </div>
         )}
       </div>
     </>
