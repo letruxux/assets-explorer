@@ -1,4 +1,5 @@
 import { Asset } from "@shared/types";
+import { relativeDate } from "@shared/utils";
 
 export function Changelog({ asset }: { asset: Asset }): React.JSX.Element {
   if (asset.changelog.length === 0)
@@ -22,9 +23,16 @@ export function Changelog({ asset }: { asset: Asset }): React.JSX.Element {
               .map((c) => (
                 <tr key={c.name} className="group">
                   <td>
-                    <span className="badge group-first:badge-primary">{c.name}</span>
+                    <a href={c.page_url} rel="noreferrer" target="_blank">
+                      <span className="badge group-first:badge-primary">{c.name}</span>
+                    </a>
                   </td>
-                  <td>{c.description}</td>
+                  <td>
+                    {c.description}{" "}
+                    {c.date && (
+                      <span className="text-sm text-base-content/70">({relativeDate(c.date)})</span>
+                    )}
+                  </td>
                 </tr>
               ))}
           </tbody>
