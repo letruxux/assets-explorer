@@ -101,7 +101,7 @@ function ViewAsset(): React.JSX.Element {
             <span className="truncate">{asset.title}</span>{" "}
             <ExternalLink className="inline shrink-0" />
           </a>
-          {settings.showDebugInfo && <small className="text-gray-500 text-xs">#{asset.id}</small>}
+          {settings?.showDebugInfo && <small className="text-gray-500 text-xs">#{asset.id}</small>}
         </span>
       </h1>
 
@@ -132,7 +132,7 @@ function ViewAsset(): React.JSX.Element {
       <AssetDownloads asset={asset} />
       <Changelog asset={asset} />
 
-      {settings.showDebugInfo && (
+      {settings?.showDebugInfo && (
         <>
           <pre className="w-full p-1">{JSON.stringify(asset, null, 2)}</pre>
           <pre className="w-full p-1 mt-4">{JSON.stringify(metadata, null, 2)}</pre>

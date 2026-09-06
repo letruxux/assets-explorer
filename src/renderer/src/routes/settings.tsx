@@ -1,7 +1,7 @@
 import { AssetCard } from "@renderer/components/asset-card";
 import useResult from "@renderer/hooks/use-result";
 import { useSettings } from "@renderer/store/use-settings";
-import { DEFAULT_SETTINGS, SettingsType } from "@shared/types";
+import { SettingsType } from "@shared/types";
 import { ExternalLinkIcon, Loader2, SaveIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -209,14 +209,10 @@ function SettingGroup({
 
 function Settings(): React.JSX.Element {
   const { settings, loading } = useSettings();
-  const [sketchfabApiKey, setSketchfabApiKey] = useState(settings?.sketchfabApiKey);
-  const [polyPizzaApiKey, setPolyPizzaApiKey] = useState(settings?.polyPizzaApiKey);
-  const [showFeatured, setShowFeatured] = useState(
-    settings?.showFeatured ?? DEFAULT_SETTINGS.showFeatured
-  );
-  const [showDebugInfo, setShowDebugInfo] = useState(
-    settings?.showDebugInfo ?? DEFAULT_SETTINGS.showDebugInfo
-  );
+  const [sketchfabApiKey, setSketchfabApiKey] = useState(settings?.sketchfabApiKey ?? null);
+  const [polyPizzaApiKey, setPolyPizzaApiKey] = useState(settings?.polyPizzaApiKey ?? null);
+  const [showFeatured, setShowFeatured] = useState(settings?.showFeatured);
+  const [showDebugInfo, setShowDebugInfo] = useState(settings?.showDebugInfo);
   const [savingFeatured, setSavingFeatured] = useState(false);
   const [savingDebugInfo, setSavingDebugInfo] = useState(false);
 
@@ -397,7 +393,7 @@ function Settings(): React.JSX.Element {
             </span>
           </div>
         )}
-        {settings.showDebugInfo && (
+        {settings?.showDebugInfo && (
           <div className="my-4 gap-y-4 flex flex-col">
             <pre className="bg-base-200 p-1">{JSON.stringify(settings, null, 2)}</pre>
             <AssetCard

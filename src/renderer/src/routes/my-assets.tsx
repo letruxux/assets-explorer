@@ -29,10 +29,10 @@ function About(): React.JSX.Element {
         <h1 className="text-2xl font-bold">My Assets</h1>
         <div className="grow" />
         <button
-          disabled={!settings.assetsPath}
+          disabled={!settings?.assetsPath}
           className="btn btn-ghost btn-square"
           onClick={() => {
-            window.api.open(settings.assetsPath!);
+            window.api.open(settings!.assetsPath!);
           }}
         >
           <FolderIcon />

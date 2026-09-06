@@ -82,13 +82,6 @@ export interface SettingsType {
   showFeatured: boolean;
   showDebugInfo: boolean;
 }
-export const DEFAULT_SETTINGS: SettingsType = {
-  assetsPath: null,
-  sketchfabApiKey: null,
-  polyPizzaApiKey: null,
-  showFeatured: true,
-  showDebugInfo: false
-};
 
 export interface InstalledFile {
   file: Asset["files"][number];
